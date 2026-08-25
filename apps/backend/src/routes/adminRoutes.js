@@ -7,6 +7,8 @@ import { User } from '../models/User.js';
 import { VideoProject } from '../models/VideoProject.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
+import { getCostSummary } from '../services/costService.js';
+import { listProviderHealth } from '../services/providerHealthService.js';
 
 export const adminRoutes = express.Router();
 
@@ -45,3 +47,20 @@ adminRoutes.get('/audit-logs', async (req, res, next) => {
   }
 });
 
+adminRoutes.get('/provider-health', async (req, res, next) => {
+  try {
+    const health = await listProviderHealth();
+    res.json({ health });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.get('/cost-summary', async (req, res, next) => {
+  try {
+    const summary = await getCostSummary();
+    res.json({ summary });
+  } catch (error) {
+    next(error);
+  }
+});

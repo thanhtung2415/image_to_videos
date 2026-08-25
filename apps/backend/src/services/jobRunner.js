@@ -1,6 +1,7 @@
 import { GenerationJob } from '../models/GenerationJob.js';
 import { VideoProject } from '../models/VideoProject.js';
 import { captureReservedCredits, releaseReservedCredits } from './creditService.js';
+import { recordCostEvent } from './costService.js';
 import { notifyUser } from './notificationService.js';
 import { uploadVideo } from './storageService.js';
 import { createVideoFromImage } from './videoService.js';
@@ -58,6 +59,20 @@ export async function runGenerationJob(jobId) {
       errorMessage: ''
     });
 
+    await recordCostEvent({
+      user: job.user,
+      project: job.project._id,
+      job: job._id,
+      provider: job.provider,
+      model: job.model,
+      eventType: 'captured',
+      credits: job.costCredits,
+      metadata: {
+        duration: job.duration,
+        resolution: job.resolution
+      }
+    });
+
     await captureReservedCredits({
       userId: job.user,
       projectId: job.project._id,
@@ -90,6 +105,19 @@ export async function runGenerationJob(jobId) {
       amount: job.costCredits,
       idempotencyKey: `release:${job._id}`,
       note: error.message || 'Generation failed'
+    });
+
+    await recordCostEvent({
+      user: job.user,
+      project: job.project._id,
+      job: job._id,
+      provider: job.provider,
+      model: job.model,
+      eventType: 'failed',
+      credits: job.costCredits,
+      metadata: {
+        error: error.message
+      }
     });
 
     await notifyUser({

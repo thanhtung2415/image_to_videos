@@ -1,5 +1,6 @@
 import express from 'express';
 import { listProviders } from '../services/providers/providerRouter.js';
+import { listProviderHealth } from '../services/providerHealthService.js';
 
 export const providerRoutes = express.Router();
 
@@ -11,3 +12,11 @@ providerRoutes.get('/', (req, res) => {
   });
 });
 
+providerRoutes.get('/health', async (req, res, next) => {
+  try {
+    const health = await listProviderHealth();
+    res.json({ health });
+  } catch (error) {
+    next(error);
+  }
+});
