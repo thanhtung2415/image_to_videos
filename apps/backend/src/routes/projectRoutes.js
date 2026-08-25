@@ -7,6 +7,7 @@ import { imageUpload } from '../middleware/upload.js';
 import { env } from '../config/env.js';
 import { enqueueGeneration } from '../services/queueService.js';
 import { reserveCredits } from '../services/creditService.js';
+import { estimateProviderCost, getProvider } from '../services/providers/providerRouter.js';
 
 export const projectRoutes = express.Router();
 
@@ -14,7 +15,10 @@ const createProjectSchema = z.object({
   title: z.string().min(2).max(120),
   prompt: z.string().max(600).optional().default(''),
   duration: z.coerce.number().min(3).max(10).default(5),
-  resolution: z.enum(['1280x720', '720x1280', '1024x1024']).default('1280x720')
+  resolution: z.enum(['1280x720', '720x1280', '1024x1024']).default('1280x720'),
+  generationMode: z.enum(['ffmpeg', 'ai']).default('ffmpeg'),
+  provider: z.string().max(40).optional().default('ffmpeg'),
+  model: z.string().max(80).optional().default('ffmpeg-basic')
 });
 
 projectRoutes.use(requireAuth);
@@ -35,12 +39,31 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
     }
 
     const data = createProjectSchema.parse(req.body);
-    const costCredits = 5;
+    const providerName = data.generationMode === 'ai' ? data.provider : 'ffmpeg';
+    const modelName = data.generationMode === 'ai' ? data.model : 'ffmpeg-basic';
+    const provider = data.generationMode === 'ai' ? getProvider(providerName) : null;
+
+    if (data.generationMode === 'ai' && (!provider || !provider.enabled)) {
+      return res.status(400).json({ message: 'AI provider chua duoc cau hinh API key' });
+    }
+
+    const providerCost = data.generationMode === 'ai'
+      ? estimateProviderCost({ provider: providerName, model: modelName, duration: data.duration })
+      : 5;
+
+    if (!providerCost) {
+      return res.status(400).json({ message: 'AI model khong hop le' });
+    }
+
+    const costCredits = providerCost;
     const project = await VideoProject.create({
       user: req.user._id,
       title: data.title,
       prompt: data.prompt,
       status: 'queued',
+      generationMode: data.generationMode,
+      provider: providerName,
+      model: modelName,
       costCredits,
       sourceImage: {
         url: `${env.publicBackendUrl}/media/assets/${req.file.filename}`,
@@ -70,6 +93,8 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
       user: req.user._id,
       duration: data.duration,
       resolution: data.resolution,
+      provider: providerName,
+      model: modelName,
       costCredits,
       status: 'queued'
     });

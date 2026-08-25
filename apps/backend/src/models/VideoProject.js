@@ -46,6 +46,15 @@ const videoProjectSchema = new mongoose.Schema(
       enum: ['ffmpeg', 'ai'],
       default: 'ffmpeg'
     },
+    provider: {
+      type: String,
+      default: 'ffmpeg',
+      index: true
+    },
+    model: {
+      type: String,
+      default: 'ffmpeg-basic'
+    },
     costCredits: {
       type: Number,
       default: 5
@@ -59,4 +68,3 @@ const videoProjectSchema = new mongoose.Schema(
 );
 
 export const VideoProject = mongoose.model('VideoProject', videoProjectSchema);
-

@@ -15,6 +15,17 @@ export const env = {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
     apiKey: process.env.CLOUDINARY_API_KEY || '',
     apiSecret: process.env.CLOUDINARY_API_SECRET || ''
+  },
+  providers: {
+    fal: {
+      apiKey: process.env.FAL_API_KEY || ''
+    },
+    runway: {
+      apiKey: process.env.RUNWAY_API_KEY || ''
+    },
+    luma: {
+      apiKey: process.env.LUMA_API_KEY || ''
+    }
   }
 };
 

@@ -63,6 +63,10 @@ export function getProjects() {
   return apiFetch('/projects');
 }
 
+export function getProviders() {
+  return apiFetch('/providers');
+}
+
 export function getProject(id) {
   return apiFetch(`/projects/${id}`);
 }
@@ -73,4 +77,3 @@ export function createProject(formData) {
     body: formData
   });
 }
-

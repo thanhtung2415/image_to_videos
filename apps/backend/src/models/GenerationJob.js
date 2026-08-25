@@ -32,6 +32,19 @@ const generationJobSchema = new mongoose.Schema(
       type: String,
       default: '1280x720'
     },
+    provider: {
+      type: String,
+      default: 'ffmpeg'
+    },
+    model: {
+      type: String,
+      default: 'ffmpeg-basic'
+    },
+    providerGenerationId: {
+      type: String,
+      default: '',
+      index: true
+    },
     costCredits: {
       type: Number,
       default: 5

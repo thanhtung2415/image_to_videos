@@ -25,6 +25,10 @@ export async function runGenerationJob(jobId) {
     job.startedAt = new Date();
     await updateJob(job, { status: 'processing', progress: 20 });
 
+    if (job.provider !== 'ffmpeg') {
+      throw new Error('AI provider adapter is prepared but external generation is not connected yet');
+    }
+
     const outputPath = await createVideoFromImage({
       imagePath: job.project.sourceImage.path,
       duration: job.duration,

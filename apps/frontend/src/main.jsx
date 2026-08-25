@@ -6,6 +6,7 @@ import {
   createProject,
   getProject,
   getProjects,
+  getProviders,
   getStoredUser,
   login,
   register,
@@ -113,11 +114,24 @@ function ProjectForm({ onCreated }) {
   const [prompt, setPrompt] = useState('Tao chuyen dong nhe, cam giac cinematic.');
   const [duration, setDuration] = useState('5');
   const [resolution, setResolution] = useState('1280x720');
+  const [generationMode, setGenerationMode] = useState('ffmpeg');
+  const [provider, setProvider] = useState('fal');
+  const [model, setModel] = useState('fal-image-to-video');
+  const [providers, setProviders] = useState([]);
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    getProviders()
+      .then((result) => setProviders(result.providers || []))
+      .catch(() => setProviders([]));
+  }, []);
+
+  const selectedProvider = providers.find((item) => item.name === provider);
+  const selectedModels = selectedProvider?.models || [];
 
   function handleImageChange(file) {
     setImage(file);
@@ -135,6 +149,9 @@ function ProjectForm({ onCreated }) {
       formData.append('prompt', prompt);
       formData.append('duration', duration);
       formData.append('resolution', resolution);
+      formData.append('generationMode', generationMode);
+      formData.append('provider', provider);
+      formData.append('model', model);
       formData.append('image', image);
 
       const result = await createProject(formData);
@@ -189,6 +206,49 @@ function ProjectForm({ onCreated }) {
             </select>
           </label>
         </div>
+
+        <div className="form-grid">
+          <label>
+            Engine
+            <select value={generationMode} onChange={(event) => setGenerationMode(event.target.value)}>
+              <option value="ffmpeg">FFmpeg stable</option>
+              <option value="ai">AI provider</option>
+            </select>
+          </label>
+
+          <label>
+            Provider
+            <select
+              value={provider}
+              disabled={generationMode !== 'ai'}
+              onChange={(event) => {
+                const nextProvider = event.target.value;
+                const nextModels = providers.find((item) => item.name === nextProvider)?.models || [];
+                setProvider(nextProvider);
+                setModel(nextModels[0]?.id || '');
+              }}
+            >
+              {providers.map((item) => (
+                <option key={item.name} value={item.name}>
+                  {item.name} {item.enabled ? '' : '(not configured)'}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        {generationMode === 'ai' && (
+          <label>
+            Model
+            <select value={model} onChange={(event) => setModel(event.target.value)}>
+              {selectedModels.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label} - {item.native2K ? 'Native 2K' : 'Upscaled 2K'}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <button className="upload-box" type="button" onClick={() => fileInputRef.current?.click()}>
           {preview ? <img src={preview} alt="Preview upload" /> : <Upload size={32} />}

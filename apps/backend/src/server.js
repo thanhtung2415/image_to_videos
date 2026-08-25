@@ -7,6 +7,7 @@ import { connectDatabase } from './config/database.js';
 import { env } from './config/env.js';
 import { authRoutes } from './routes/authRoutes.js';
 import { creditRoutes } from './routes/creditRoutes.js';
+import { providerRoutes } from './routes/providerRoutes.js';
 import { projectRoutes } from './routes/projectRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,6 +29,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/credits', creditRoutes);
+app.use('/api/providers', providerRoutes);
 app.use('/api/projects', projectRoutes);
 
 app.use((error, req, res, next) => {
