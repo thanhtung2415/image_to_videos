@@ -33,6 +33,16 @@ function sleep(ms) {
   });
 }
 
+function formatFalError(error) {
+  const detail = error?.body?.detail || error?.response?.data?.detail;
+
+  if (detail) {
+    return `fal.ai: ${detail}`;
+  }
+
+  return error?.message || 'fal.ai generation failed';
+}
+
 export class FalProviderAdapter extends BaseProviderAdapter {
   constructor({ apiKey }) {
     super({
@@ -78,54 +88,58 @@ export class FalProviderAdapter extends BaseProviderAdapter {
 
   async createGeneration({ imagePath, mimeType, prompt, duration, resolution, onStatus }) {
     this.configure();
-    const imageUrl = await this.uploadImage({ imagePath, mimeType });
-    const { request_id: requestId } = await fal.queue.submit(FAL_FLUX_IMAGE_TO_VIDEO, {
-      input: {
-        prompt,
-        image_url: imageUrl,
-        aspect_ratio: mapAspectRatio(resolution),
-        resolution: mapResolution(resolution),
-        duration: mapDuration(duration),
-        generate_audio: false,
-        safety_tolerance: 2
-      }
-    });
+    try {
+      const imageUrl = await this.uploadImage({ imagePath, mimeType });
+      const { request_id: requestId } = await fal.queue.submit(FAL_FLUX_IMAGE_TO_VIDEO, {
+        input: {
+          prompt,
+          image_url: imageUrl,
+          aspect_ratio: mapAspectRatio(resolution),
+          resolution: mapResolution(resolution),
+          duration: mapDuration(duration),
+          generate_audio: false,
+          safety_tolerance: 2
+        }
+      });
 
-    await onStatus?.({
-      requestId,
-      status: 'SUBMITTED'
-    });
-
-    let status = await fal.queue.status(FAL_FLUX_IMAGE_TO_VIDEO, {
-      requestId,
-      logs: true
-    });
-
-    while (!['COMPLETED', 'FAILED', 'CANCELLED'].includes(status.status)) {
       await onStatus?.({
         requestId,
-        status: status.status,
-        logs: status.logs || []
+        status: 'SUBMITTED'
       });
-      await sleep(5000);
-      status = await fal.queue.status(FAL_FLUX_IMAGE_TO_VIDEO, {
+
+      let status = await fal.queue.status(FAL_FLUX_IMAGE_TO_VIDEO, {
         requestId,
         logs: true
       });
+
+      while (!['COMPLETED', 'FAILED', 'CANCELLED'].includes(status.status)) {
+        await onStatus?.({
+          requestId,
+          status: status.status,
+          logs: status.logs || []
+        });
+        await sleep(5000);
+        status = await fal.queue.status(FAL_FLUX_IMAGE_TO_VIDEO, {
+          requestId,
+          logs: true
+        });
+      }
+
+      if (status.status !== 'COMPLETED') {
+        throw new Error(`fal.ai generation ${status.status.toLowerCase()}`);
+      }
+
+      const result = await fal.queue.result(FAL_FLUX_IMAGE_TO_VIDEO, {
+        requestId
+      });
+
+      return {
+        requestId: result.requestId || requestId,
+        videoUrl: result.data?.video?.url,
+        raw: result.data
+      };
+    } catch (error) {
+      throw new Error(formatFalError(error));
     }
-
-    if (status.status !== 'COMPLETED') {
-      throw new Error(`fal.ai generation ${status.status.toLowerCase()}`);
-    }
-
-    const result = await fal.queue.result(FAL_FLUX_IMAGE_TO_VIDEO, {
-      requestId
-    });
-
-    return {
-      requestId: result.requestId || requestId,
-      videoUrl: result.data?.video?.url,
-      raw: result.data
-    };
   }
 }
