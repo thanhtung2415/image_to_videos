@@ -143,6 +143,58 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
   }
 });
 
+projectRoutes.get('/:id/events', async (req, res, next) => {
+  try {
+    const project = await VideoProject.findOne({ _id: req.params.id, user: req.user._id });
+
+    if (!project) {
+      return res.status(404).json({ message: 'Khong tim thay project' });
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+
+    let closed = false;
+    let timer;
+    req.on('close', () => {
+      closed = true;
+      if (timer) {
+        clearInterval(timer);
+      }
+    });
+
+    const sendStatus = async () => {
+      if (closed) {
+        return;
+      }
+
+      const latestProject = await VideoProject.findById(project._id);
+      const latestJob = await GenerationJob.findOne({ project: project._id }).sort({ createdAt: -1 });
+
+      res.write(`event: status\n`);
+      res.write(`data: ${JSON.stringify({ project: latestProject, job: latestJob })}\n\n`);
+
+      if (['completed', 'failed', 'cancelled'].includes(latestProject.status)) {
+        clearInterval(timer);
+        res.end();
+      }
+    };
+
+    timer = setInterval(() => {
+      sendStatus().catch((error) => {
+        clearInterval(timer);
+        next(error);
+      });
+    }, 3000);
+
+    await sendStatus();
+  } catch (error) {
+    next(error);
+  }
+});
+
 projectRoutes.get('/:id', async (req, res, next) => {
   try {
     const project = await VideoProject.findOne({ _id: req.params.id, user: req.user._id });
