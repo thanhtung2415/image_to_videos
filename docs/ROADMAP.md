@@ -7,15 +7,18 @@
 - Credit wallet co ban.
 - Luu video local hoac Cloudinary.
 - Hien thi trang thai generation job tren frontend.
+- Pricing/payment mock.
+- Notification va audit log co ban.
+- Security headers, rate limit va moderation co ban.
 
 ## Production
 
-- Tach worker rieng voi Redis va BullMQ.
-- Bo sung AI Provider Router cho fal.ai, Runway, Luma.
-- Hoan thien Pricing Engine server-side.
-- Bo sung payment payOS hoac Stripe.
-- Them notification, email va admin dashboard.
-- Them content moderation va audit log.
+- Noi API that cho fal.ai, Runway hoac Luma.
+- Bo sung payment payOS hoac Stripe voi webhook signature.
+- Them email provider that.
+- Hoan thien admin dashboard UI.
+- Tach Redis/worker tren ha tang deploy rieng.
+- Bo sung provider health monitoring va DLQ dashboard.
 
 ## Future
 
@@ -23,4 +26,3 @@
 - Batch generation.
 - Team workspace.
 - Analytics doanh thu va provider cost.
-

@@ -59,3 +59,69 @@ Form data:
 
 Lay thong tin project va job moi nhat de cap nhat trang thai.
 
+### GET `/projects/:id/events`
+
+SSE endpoint de theo doi trang thai job theo thoi gian thuc.
+
+## Providers
+
+### GET `/providers`
+
+Lay danh sach AI providers, trang thai cau hinh va model capabilities.
+
+## Pricing
+
+### GET `/pricing/plans`
+
+Lay danh sach goi credit do backend tinh va quan ly.
+
+## Payments
+
+### POST `/payments/checkout`
+
+Tao checkout session. Ban hien tai ho tro provider `mock`.
+
+Body:
+
+```json
+{
+  "planCode": "standard",
+  "idempotencyKey": "standard-unique-request-id"
+}
+```
+
+### POST `/payments/webhooks/:provider`
+
+Nhan webhook tu payment provider va luu raw event vao `payment_events`.
+
+## Credits
+
+### GET `/credits/wallet`
+
+Lay so du credit wallet.
+
+### GET `/credits/transactions`
+
+Lay lich su giao dich credit.
+
+## Notifications
+
+### GET `/notifications`
+
+Lay danh sach notification gan nhat.
+
+### PATCH `/notifications/:id/read`
+
+Danh dau notification da doc.
+
+## Admin
+
+Can user role `admin`.
+
+### GET `/admin/overview`
+
+Lay thong ke tong quan user, project, job, payment va content report.
+
+### GET `/admin/audit-logs`
+
+Lay audit logs gan nhat.
