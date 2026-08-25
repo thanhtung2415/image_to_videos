@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { z } from 'zod';
 import { User } from '../models/User.js';
+import { env } from '../config/env.js';
 import { requireAuth } from '../middleware/auth.js';
 import { signAccessToken } from '../services/tokenService.js';
 import { writeAuditLog } from '../services/auditService.js';
@@ -42,7 +43,8 @@ authRoutes.post('/register', async (req, res, next) => {
     const user = await User.create({
       name: data.name,
       email: data.email,
-      passwordHash
+      passwordHash,
+      role: env.adminEmails.includes(data.email.toLowerCase()) ? 'admin' : 'user'
     });
 
     await writeAuditLog({

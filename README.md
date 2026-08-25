@@ -33,6 +33,7 @@ copy apps\backend\.env.example apps\backend\.env
 ```bash
 MONGODB_URI=mongodb://127.0.0.1:27017/image_to_videos
 JWT_SECRET=your_secret
+ADMIN_EMAILS=admin@example.com
 FRONTEND_URL=http://localhost:5173
 PUBLIC_BACKEND_URL=http://localhost:4000
 QUEUE_MODE=local
