@@ -138,6 +138,8 @@ Khi deploy backend, can cau hinh day du cac bien trong `apps/backend/.env.exampl
 
 Huong dan chi tiet nam trong `docs/DEPLOYMENT.md`.
 
+Huong dan cau hinh AI provider fal.ai nam trong `docs/FAL_AI.md`.
+
 ## Con can lam de production that
 
 - Noi API that cho fal.ai, Runway hoac Luma.
