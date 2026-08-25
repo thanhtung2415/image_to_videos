@@ -4,10 +4,6 @@ import { VideoProject } from '../models/VideoProject.js';
 import { uploadVideo } from './storageService.js';
 import { createVideoFromImage } from './videoService.js';
 
-export function enqueueGeneration(jobId) {
-  setTimeout(() => runGenerationJob(jobId).catch(console.error), 100);
-}
-
 async function updateJob(job, fields) {
   Object.assign(job, fields);
   await job.save();
@@ -34,6 +30,7 @@ export async function runGenerationJob(jobId) {
   }
 
   try {
+    job.attemptCount += 1;
     job.startedAt = new Date();
     await updateJob(job, { status: 'processing', progress: 20 });
 
@@ -65,6 +62,7 @@ export async function runGenerationJob(jobId) {
       errorMessage: ''
     });
   } catch (error) {
+    job.failedAt = new Date();
     await updateJob(job, {
       status: 'failed',
       progress: 100,
@@ -73,4 +71,3 @@ export async function runGenerationJob(jobId) {
     await refundCredits(job.user, job.costCredits);
   }
 }
-

@@ -6,7 +6,7 @@ import { VideoProject } from '../models/VideoProject.js';
 import { requireAuth } from '../middleware/auth.js';
 import { imageUpload } from '../middleware/upload.js';
 import { env } from '../config/env.js';
-import { enqueueGeneration } from '../services/jobRunner.js';
+import { enqueueGeneration } from '../services/queueService.js';
 
 export const projectRoutes = express.Router();
 
@@ -70,7 +70,10 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
       status: 'queued'
     });
 
-    enqueueGeneration(job._id);
+    const queueInfo = await enqueueGeneration(job._id);
+    job.queueMode = queueInfo.mode;
+    job.queueJobId = queueInfo.queueJobId;
+    await job.save();
 
     res.status(201).json({ project, job });
   } catch (error) {
@@ -92,4 +95,3 @@ projectRoutes.get('/:id', async (req, res, next) => {
     next(error);
   }
 });
-

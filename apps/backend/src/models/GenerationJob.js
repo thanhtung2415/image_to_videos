@@ -36,15 +36,29 @@ const generationJobSchema = new mongoose.Schema(
       type: Number,
       default: 5
     },
+    queueMode: {
+      type: String,
+      enum: ['local', 'redis'],
+      default: 'local'
+    },
+    queueJobId: {
+      type: String,
+      default: '',
+      index: true
+    },
+    attemptCount: {
+      type: Number,
+      default: 0
+    },
     errorMessage: {
       type: String,
       default: ''
     },
     startedAt: Date,
+    failedAt: Date,
     completedAt: Date
   },
   { timestamps: true }
 );
 
 export const GenerationJob = mongoose.model('GenerationJob', generationJobSchema);
-

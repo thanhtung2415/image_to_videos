@@ -9,6 +9,8 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET || 'dev_secret_change_me',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
   publicBackendUrl: process.env.PUBLIC_BACKEND_URL || 'http://localhost:4000',
+  redisUrl: process.env.REDIS_URL || '',
+  queueMode: process.env.QUEUE_MODE || 'local',
   cloudinary: {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
     apiKey: process.env.CLOUDINARY_API_KEY || '',
@@ -20,3 +22,6 @@ export function hasCloudinaryConfig() {
   return Boolean(env.cloudinary.cloudName && env.cloudinary.apiKey && env.cloudinary.apiSecret);
 }
 
+export function shouldUseRedisQueue() {
+  return env.queueMode === 'redis' && Boolean(env.redisUrl);
+}
