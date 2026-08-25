@@ -95,6 +95,9 @@ Frontend mac dinh chay tai `http://localhost:5173`, backend tai `http://localhos
 - In-app notification va email mock.
 - Security headers, rate limit, content moderation co ban, audit log.
 - Admin API overview va audit log.
+- Provider health va cost tracking.
+- Coupon va refund mock.
+- Account data export va soft delete.
 
 ## Deploy goi y
 

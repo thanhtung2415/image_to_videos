@@ -125,3 +125,55 @@ Lay thong ke tong quan user, project, job, payment va content report.
 ### GET `/admin/audit-logs`
 
 Lay audit logs gan nhat.
+
+### GET `/admin/provider-health`
+
+Lay trang thai health cua cac AI provider.
+
+### GET `/admin/cost-summary`
+
+Lay tong hop cost/credit theo provider.
+
+### GET `/admin/coupons`
+
+Lay danh sach coupon.
+
+### POST `/admin/coupons`
+
+Tao coupon moi.
+
+Body:
+
+```json
+{
+  "code": "SALE20",
+  "type": "percent",
+  "value": 20,
+  "maxUses": 100
+}
+```
+
+## Account
+
+### GET `/account/export`
+
+Export du lieu ca nhan cua user dang dang nhap.
+
+### DELETE `/account`
+
+Soft delete tai khoan user dang dang nhap.
+
+## Refund
+
+### POST `/payments/:id/refund`
+
+Admin refund mot payment da thanh toan.
+
+Body:
+
+```json
+{
+  "reason": "Customer request",
+  "idempotencyKey": "refund-payment-id-001"
+}
+```
