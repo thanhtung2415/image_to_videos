@@ -111,6 +111,12 @@ export function createProject(formData) {
   });
 }
 
+export function cancelProject(id) {
+  return apiFetch(`/projects/${id}/cancel`, {
+    method: 'POST'
+  });
+}
+
 export function reportProject(payload) {
   return apiFetch('/content/reports', {
     method: 'POST',

@@ -37,6 +37,12 @@ export async function runGenerationJob(jobId) {
       resolution: job.resolution
     });
 
+    const latestJob = await GenerationJob.findById(job._id);
+
+    if (!latestJob || latestJob.status === 'cancelled') {
+      return;
+    }
+
     await updateJob(job, { status: 'post_processing', progress: 70 });
     await updateJob(job, { status: 'uploading', progress: 85 });
 

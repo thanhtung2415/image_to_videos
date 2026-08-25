@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import {
   clearSession,
+  cancelProject,
   createCheckout,
   createProject,
   deleteAccount,
@@ -559,9 +560,11 @@ function StatusBadge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
 }
 
-function ProjectCard({ project, onRefresh }) {
+function ProjectCard({ project, onCancel, onRefresh }) {
   const [reporting, setReporting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [message, setMessage] = useState('');
+  const canCancel = ['queued', 'processing', 'post_processing', 'uploading'].includes(project.status);
 
   async function handleReport() {
     const reason = window.prompt('Ly do report video nay?');
@@ -583,6 +586,24 @@ function ProjectCard({ project, onRefresh }) {
       setMessage(err.message);
     } finally {
       setReporting(false);
+    }
+  }
+
+  async function handleCancel() {
+    if (!window.confirm('Ban muon huy job tao video nay?')) {
+      return;
+    }
+
+    setCancelling(true);
+    setMessage('');
+
+    try {
+      await onCancel(project._id);
+      setMessage('Da huy job va hoan credit.');
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -619,6 +640,12 @@ function ProjectCard({ project, onRefresh }) {
             {reporting ? <LoaderCircle className="spin" size={16} /> : <Flag size={16} />}
             Report
           </button>
+          {canCancel && (
+            <button className="danger-button compact" disabled={cancelling} type="button" onClick={handleCancel}>
+              {cancelling ? <LoaderCircle className="spin" size={16} /> : <Trash2 size={16} />}
+              Cancel
+            </button>
+          )}
         </div>
         {project.status !== 'completed' && (
           <button className="ghost-button" type="button" onClick={() => onRefresh(project._id)}>
@@ -656,6 +683,18 @@ function Dashboard({ user, onLogout }) {
   async function refreshProject(projectId) {
     const result = await getProject(projectId);
     setProjects((items) => items.map((item) => (item._id === projectId ? result.project : item)));
+  }
+
+  async function handleCancelProject(projectId) {
+    const result = await cancelProject(projectId);
+    setProjects((items) => items.map((item) => (item._id === projectId ? result.project : item)));
+
+    if (result.wallet) {
+      setCurrentUser((value) => ({
+        ...value,
+        creditWallet: result.wallet
+      }));
+    }
   }
 
   useEffect(() => {
@@ -763,7 +802,7 @@ function Dashboard({ user, onLogout }) {
 
           <div className="project-list">
             {projects.map((project) => (
-              <ProjectCard key={project._id} project={project} onRefresh={refreshProject} />
+              <ProjectCard key={project._id} project={project} onCancel={handleCancelProject} onRefresh={refreshProject} />
             ))}
           </div>
         </section>

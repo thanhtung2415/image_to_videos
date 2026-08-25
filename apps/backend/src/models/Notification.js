@@ -15,6 +15,7 @@ const notificationSchema = new mongoose.Schema(
         'VIDEO_PROCESSING',
         'VIDEO_COMPLETED',
         'VIDEO_FAILED',
+        'VIDEO_CANCELLED',
         'PAYMENT_SUCCESS',
         'PAYMENT_FAILED',
         'CREDIT_PURCHASED',
@@ -41,4 +42,3 @@ const notificationSchema = new mongoose.Schema(
 );
 
 export const Notification = mongoose.model('Notification', notificationSchema);
-

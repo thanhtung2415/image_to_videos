@@ -5,8 +5,8 @@ import { VideoProject } from '../models/VideoProject.js';
 import { requireAuth } from '../middleware/auth.js';
 import { imageUpload } from '../middleware/upload.js';
 import { env } from '../config/env.js';
-import { enqueueGeneration } from '../services/queueService.js';
-import { reserveCredits } from '../services/creditService.js';
+import { cancelQueuedGeneration, enqueueGeneration } from '../services/queueService.js';
+import { releaseReservedCredits, reserveCredits } from '../services/creditService.js';
 import { estimateProviderCost, getProvider } from '../services/providers/providerRouter.js';
 import { notifyUser } from '../services/notificationService.js';
 import { moderateProjectInput } from '../services/moderationService.js';
@@ -138,6 +138,75 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
     });
 
     res.status(201).json({ project, job });
+  } catch (error) {
+    next(error);
+  }
+});
+
+projectRoutes.post('/:id/cancel', async (req, res, next) => {
+  try {
+    const project = await VideoProject.findOne({ _id: req.params.id, user: req.user._id });
+
+    if (!project) {
+      return res.status(404).json({ message: 'Khong tim thay project' });
+    }
+
+    if (!['queued', 'processing', 'post_processing', 'uploading'].includes(project.status)) {
+      return res.status(400).json({ message: 'Project khong the huy o trang thai hien tai' });
+    }
+
+    const job = await GenerationJob.findOne({ project: project._id }).sort({ createdAt: -1 });
+
+    if (!job) {
+      return res.status(404).json({ message: 'Khong tim thay generation job' });
+    }
+
+    const queueCancelResult = await cancelQueuedGeneration(job.queueJobId);
+
+    project.status = 'cancelled';
+    project.errorMessage = 'User cancelled generation';
+    await project.save();
+
+    job.status = 'cancelled';
+    job.progress = 100;
+    job.errorMessage = 'User cancelled generation';
+    job.completedAt = new Date();
+    await job.save();
+
+    const wallet = await releaseReservedCredits({
+      userId: req.user._id,
+      projectId: project._id,
+      jobId: job._id,
+      amount: job.costCredits,
+      idempotencyKey: `cancel-release:${job._id}`,
+      note: 'User cancelled generation'
+    });
+
+    await notifyUser({
+      userId: req.user._id,
+      type: 'VIDEO_CANCELLED',
+      title: 'Video da duoc huy',
+      message: 'Credit reserve da duoc hoan ve vi cua ban.',
+      metadata: {
+        projectId: project._id,
+        jobId: job._id,
+        queueCancelResult
+      }
+    });
+
+    await writeAuditLog({
+      actor: req.user._id,
+      action: 'project.cancel',
+      resourceType: 'VideoProject',
+      resourceId: project._id.toString(),
+      req,
+      metadata: {
+        jobId: job._id,
+        queueCancelResult
+      }
+    });
+
+    res.json({ project, job, wallet: wallet?.creditWallet || req.user.creditWallet });
   } catch (error) {
     next(error);
   }

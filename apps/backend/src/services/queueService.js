@@ -64,3 +64,37 @@ export async function enqueueGeneration(jobId) {
   };
 }
 
+export async function cancelQueuedGeneration(queueJobId) {
+  const queueInstance = getGenerationQueue();
+
+  if (!queueInstance || !queueJobId) {
+    return {
+      removed: false,
+      reason: 'Queue is local or queue job id is empty'
+    };
+  }
+
+  const queueJob = await queueInstance.getJob(queueJobId);
+
+  if (!queueJob) {
+    return {
+      removed: false,
+      reason: 'Queue job not found'
+    };
+  }
+
+  const state = await queueJob.getState();
+
+  if (['waiting', 'delayed', 'prioritized'].includes(state)) {
+    await queueJob.remove();
+    return {
+      removed: true,
+      reason: `Removed ${state} queue job`
+    };
+  }
+
+  return {
+    removed: false,
+    reason: `Queue job is ${state}`
+  };
+}
