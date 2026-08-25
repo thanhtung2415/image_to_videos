@@ -22,7 +22,7 @@ export const env = {
   },
   providers: {
     fal: {
-      apiKey: process.env.FAL_API_KEY || ''
+      apiKey: process.env.FAL_API_KEY || process.env.FAL_KEY || ''
     },
     runway: {
       apiKey: process.env.RUNWAY_API_KEY || ''

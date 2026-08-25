@@ -110,6 +110,7 @@ Coupon demo: `SALE20`.
 ## Da co theo SRS v2.0
 
 - AI Provider Router/Adapter skeleton cho fal.ai, Runway, Luma.
+- fal.ai FLUX 3 Image to Video adapter that bang `FAL_API_KEY`.
 - Pricing Engine server-side voi cac goi Trial, Standard, Pro, Premium.
 - Payment abstraction mock, co Payment va PaymentEvent collections.
 - Credit reserve/capture/release va CreditTransaction collection.
@@ -138,6 +139,7 @@ Huong dan chi tiet nam trong `docs/DEPLOYMENT.md`.
 ## Con can lam de production that
 
 - Noi API that cho fal.ai, Runway hoac Luma.
+- Bo sung adapter that cho Runway hoac Luma.
 - Noi payment that voi payOS hoac Stripe va verify webhook signature.
 - Tao admin UI day du.
 - Bo sung email provider that nhu Resend/Brevo.

@@ -3,6 +3,7 @@ import { VideoProject } from '../models/VideoProject.js';
 import { captureReservedCredits, releaseReservedCredits } from './creditService.js';
 import { recordCostEvent } from './costService.js';
 import { notifyUser } from './notificationService.js';
+import { getProvider } from './providers/providerRouter.js';
 import { uploadVideo } from './storageService.js';
 import { createVideoFromImage } from './videoService.js';
 
@@ -27,15 +28,39 @@ export async function runGenerationJob(jobId) {
     job.startedAt = new Date();
     await updateJob(job, { status: 'processing', progress: 20 });
 
-    if (job.provider !== 'ffmpeg') {
-      throw new Error('AI provider adapter is prepared but external generation is not connected yet');
-    }
+    let outputPath = '';
+    let externalVideoUrl = '';
 
-    const outputPath = await createVideoFromImage({
-      imagePath: job.project.sourceImage.path,
-      duration: job.duration,
-      resolution: job.resolution
-    });
+    if (job.provider === 'ffmpeg') {
+      outputPath = await createVideoFromImage({
+        imagePath: job.project.sourceImage.path,
+        duration: job.duration,
+        resolution: job.resolution
+      });
+    } else {
+      const provider = getProvider(job.provider);
+
+      if (!provider || !provider.enabled) {
+        throw new Error('AI provider chua duoc cau hinh');
+      }
+
+      const generation = await provider.createGeneration({
+        imagePath: job.project.sourceImage.path,
+        mimeType: job.project.sourceImage.mimeType,
+        prompt: job.project.prompt,
+        duration: job.duration,
+        resolution: job.resolution,
+        model: job.model
+      });
+
+      job.providerGenerationId = generation.requestId || '';
+      await job.save();
+      externalVideoUrl = generation.videoUrl;
+
+      if (!externalVideoUrl) {
+        throw new Error('AI provider khong tra ve video URL');
+      }
+    }
 
     const latestJob = await GenerationJob.findById(job._id);
 
@@ -46,7 +71,12 @@ export async function runGenerationJob(jobId) {
     await updateJob(job, { status: 'post_processing', progress: 70 });
     await updateJob(job, { status: 'uploading', progress: 85 });
 
-    const uploaded = await uploadVideo(outputPath);
+    const uploaded = outputPath
+      ? await uploadVideo(outputPath)
+      : {
+          url: externalVideoUrl,
+          publicId: job.providerGenerationId
+        };
 
     job.status = 'completed';
     job.progress = 100;

@@ -1,25 +1,9 @@
 import { env } from '../../config/env.js';
 import { BaseProviderAdapter } from './BaseProviderAdapter.js';
+import { FalProviderAdapter } from './FalProviderAdapter.js';
 
 const providerAdapters = [
-  new BaseProviderAdapter({
-    name: 'fal',
-    enabled: Boolean(env.providers.fal.apiKey),
-    models: [
-      {
-        id: 'fal-image-to-video',
-        label: 'fal.ai Image to Video',
-        type: 'image-to-video',
-        maxDuration: 5,
-        defaultDuration: 5,
-        supportedResolutions: ['provider_default'],
-        native2K: false,
-        upscale2K: true,
-        baseCredits: 25,
-        extraSecondCredits: 5
-      }
-    ]
-  }),
+  new FalProviderAdapter({ apiKey: env.providers.fal.apiKey }),
   new BaseProviderAdapter({
     name: 'runway',
     enabled: Boolean(env.providers.runway.apiKey),
@@ -83,4 +67,3 @@ export function estimateProviderCost({ provider, model, duration }) {
 
   return adapter.estimateCost(model, { duration });
 }
-

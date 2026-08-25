@@ -146,7 +146,7 @@ function ProjectForm({ onCreated }) {
   const [resolution, setResolution] = useState('1280x720');
   const [generationMode, setGenerationMode] = useState('ffmpeg');
   const [provider, setProvider] = useState('fal');
-  const [model, setModel] = useState('fal-image-to-video');
+  const [model, setModel] = useState('blackforestlabs/flux-3/image-to-video');
   const [providers, setProviders] = useState([]);
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState('');
@@ -156,7 +156,15 @@ function ProjectForm({ onCreated }) {
 
   useEffect(() => {
     getProviders()
-      .then((result) => setProviders(result.providers || []))
+      .then((result) => {
+        const providerList = result.providers || [];
+        setProviders(providerList);
+        const firstFalModel = providerList.find((item) => item.name === 'fal')?.models?.[0]?.id;
+
+        if (firstFalModel) {
+          setModel(firstFalModel);
+        }
+      })
       .catch(() => setProviders([]));
   }, []);
 

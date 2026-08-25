@@ -91,6 +91,8 @@ SSE endpoint de theo doi trang thai job theo thoi gian thuc.
 
 Lay danh sach AI providers, trang thai cau hinh va model capabilities.
 
+Provider `fal` se enabled khi backend co `FAL_API_KEY` hoac `FAL_KEY`.
+
 ## Pricing
 
 ### GET `/pricing/plans`
