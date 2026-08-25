@@ -34,6 +34,13 @@ export const env = {
   payment: {
     provider: process.env.PAYMENT_PROVIDER || 'mock',
     webhookSecret: process.env.PAYMENT_WEBHOOK_SECRET || 'dev_webhook_secret'
+  },
+  smtp: {
+    host: process.env.SMTP_HOST || '',
+    port: Number(process.env.SMTP_PORT || 587),
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.SMTP_FROM || 'no-reply@image-to-videos.local'
   }
 };
 

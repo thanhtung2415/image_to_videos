@@ -115,7 +115,7 @@ Coupon demo: `SALE20`.
 - Credit reserve/capture/release va CreditTransaction collection.
 - Background queue voi BullMQ/Redis va worker rieng.
 - SSE endpoint cho realtime status, frontend van co polling fallback.
-- In-app notification va email mock.
+- In-app notification va email mock/SMTP.
 - Security headers, rate limit, content moderation co ban, audit log.
 - Admin API overview va audit log.
 - Provider health va cost tracking.

@@ -33,6 +33,11 @@ REDIS_URL=
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
 ```
 
 ## Database
@@ -46,6 +51,10 @@ Dung Upstash Redis hoac Redis Cloud. Gan `REDIS_URL` cho ca API va worker.
 ## Storage
 
 Dung Cloudinary. Khi backend co du 3 bien Cloudinary, video output se duoc upload len Cloudinary.
+
+## Email
+
+Neu co SMTP provider, cau hinh `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`. Neu bo trong, backend se dung email mock va in noi dung email ra log.
 
 ## Production checklist
 
