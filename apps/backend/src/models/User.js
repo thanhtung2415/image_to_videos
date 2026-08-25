@@ -25,6 +25,16 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user'
     },
+    emailVerifiedAt: Date,
+    emailVerificationTokenHash: {
+      type: String,
+      default: ''
+    },
+    passwordResetTokenHash: {
+      type: String,
+      default: ''
+    },
+    passwordResetExpiresAt: Date,
     status: {
       type: String,
       enum: ['active', 'deleted'],

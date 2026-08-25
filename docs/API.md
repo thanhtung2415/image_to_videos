@@ -45,6 +45,18 @@ Header:
 Authorization: Bearer <token>
 ```
 
+### POST `/auth/verify-email`
+
+Xac minh email bang token duoc gui qua email mock/provider.
+
+### POST `/auth/forgot-password`
+
+Gui token reset mat khau qua email mock/provider.
+
+### POST `/auth/reset-password`
+
+Dat lai mat khau bang reset token.
+
 ## Projects
 
 ### GET `/projects`
