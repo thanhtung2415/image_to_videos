@@ -397,6 +397,31 @@ textarea {
   gap: 8px;
 }
 
+.admin-form {
+  display: grid;
+  gap: 10px;
+}
+
+.compact-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.compact-list article {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #d8e1ed;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.compact-list span {
+  color: #64748b;
+  font-size: 13px;
+}
+
 .provider-row {
   display: flex;
   align-items: center;

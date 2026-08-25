@@ -93,6 +93,21 @@ export function getAdminCostSummary() {
   return apiFetch('/admin/cost-summary');
 }
 
+export function getAdminCoupons() {
+  return apiFetch('/admin/coupons');
+}
+
+export function createAdminCoupon(payload) {
+  return apiFetch('/admin/coupons', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function getAdminContentReports() {
+  return apiFetch('/admin/content-reports');
+}
+
 export function createCheckout(payload) {
   return apiFetch('/payments/checkout', {
     method: 'POST',

@@ -18,10 +18,13 @@ import {
 import {
   clearSession,
   cancelProject,
+  createAdminCoupon,
   createCheckout,
   createProject,
   deleteAccount,
   getAdminCostSummary,
+  getAdminContentReports,
+  getAdminCoupons,
   getAdminOverview,
   getAdminProviderHealth,
   getAccountExportUrl,
@@ -404,20 +407,28 @@ function AdminPanel() {
   const [overview, setOverview] = useState(null);
   const [health, setHealth] = useState([]);
   const [costSummary, setCostSummary] = useState(null);
+  const [coupons, setCoupons] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [couponForm, setCouponForm] = useState({ code: 'SALE20', type: 'percent', value: '20', maxUses: '100' });
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   async function loadAdminData() {
     setError('');
 
     try {
-      const [overviewResult, healthResult, costResult] = await Promise.all([
+      const [overviewResult, healthResult, costResult, couponResult, reportResult] = await Promise.all([
         getAdminOverview(),
         getAdminProviderHealth(),
-        getAdminCostSummary()
+        getAdminCostSummary(),
+        getAdminCoupons(),
+        getAdminContentReports()
       ]);
       setOverview(overviewResult.overview);
       setHealth(healthResult.health || []);
       setCostSummary(costResult.summary);
+      setCoupons(couponResult.coupons || []);
+      setReports(reportResult.reports || []);
     } catch (err) {
       setError(err.message);
     }
@@ -427,6 +438,25 @@ function AdminPanel() {
     loadAdminData();
   }, []);
 
+  async function handleCreateCoupon(event) {
+    event.preventDefault();
+    setMessage('');
+    setError('');
+
+    try {
+      await createAdminCoupon({
+        code: couponForm.code,
+        type: couponForm.type,
+        value: Number(couponForm.value),
+        maxUses: Number(couponForm.maxUses)
+      });
+      setMessage('Coupon created.');
+      await loadAdminData();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
     <section className="panel admin-panel">
       <div className="section-title">
@@ -435,6 +465,7 @@ function AdminPanel() {
       </div>
 
       {error && <div className="alert">{error}</div>}
+      {message && <div className="muted-message">{message}</div>}
 
       {overview && (
         <div className="metric-grid">
@@ -482,6 +513,64 @@ function AdminPanel() {
           </div>
         </>
       )}
+
+      <div className="section-title compact">
+        <Sparkles size={20} />
+        <h3>Coupon management</h3>
+      </div>
+
+      <form className="admin-form" onSubmit={handleCreateCoupon}>
+        <input
+          value={couponForm.code}
+          onChange={(event) => setCouponForm({ ...couponForm, code: event.target.value })}
+          placeholder="Code"
+        />
+        <select value={couponForm.type} onChange={(event) => setCouponForm({ ...couponForm, type: event.target.value })}>
+          <option value="percent">Percent</option>
+          <option value="fixed">Fixed</option>
+        </select>
+        <input
+          min="0"
+          type="number"
+          value={couponForm.value}
+          onChange={(event) => setCouponForm({ ...couponForm, value: event.target.value })}
+          placeholder="Value"
+        />
+        <input
+          min="0"
+          type="number"
+          value={couponForm.maxUses}
+          onChange={(event) => setCouponForm({ ...couponForm, maxUses: event.target.value })}
+          placeholder="Max uses"
+        />
+        <button className="ghost-button" type="submit">
+          Create coupon
+        </button>
+      </form>
+
+      <div className="compact-list">
+        {coupons.slice(0, 5).map((coupon) => (
+          <article key={coupon._id}>
+            <strong>{coupon.code}</strong>
+            <span>{coupon.type} {coupon.value} - used {coupon.usedCount}/{coupon.maxUses || '∞'}</span>
+          </article>
+        ))}
+      </div>
+
+      <div className="section-title compact">
+        <Flag size={20} />
+        <h3>Content reports</h3>
+      </div>
+
+      <div className="compact-list">
+        {reports.length === 0 && <div className="empty small">No reports.</div>}
+        {reports.slice(0, 5).map((report) => (
+          <article key={report._id}>
+            <strong>{report.project?.title || 'Unknown project'}</strong>
+            <span>{report.reason}</span>
+          </article>
+        ))}
+      </div>
     </section>
   );
 }

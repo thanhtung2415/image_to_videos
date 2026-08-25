@@ -84,6 +84,19 @@ adminRoutes.get('/coupons', async (req, res, next) => {
   }
 });
 
+adminRoutes.get('/content-reports', async (req, res, next) => {
+  try {
+    const reports = await ContentReport.find()
+      .populate('reporter', 'name email')
+      .populate('project', 'title status')
+      .sort({ createdAt: -1 })
+      .limit(100);
+    res.json({ reports });
+  } catch (error) {
+    next(error);
+  }
+});
+
 adminRoutes.post('/coupons', async (req, res, next) => {
   try {
     const data = couponSchema.parse(req.body);
