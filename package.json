@@ -12,6 +12,8 @@
     "dev:worker": "npm run dev:worker --workspace apps/backend",
     "dev:frontend": "npm run dev --workspace apps/frontend",
     "build": "npm run build --workspace apps/frontend",
+    "check": "npm run check:backend && npm run build",
+    "check:backend": "node scripts/check-backend.mjs",
     "seed:demo": "npm run seed:demo --workspace apps/backend",
     "start": "npm run start --workspace apps/backend"
   }

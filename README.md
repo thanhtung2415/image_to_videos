@@ -51,6 +51,12 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
+Kiem tra nhanh truoc khi commit/deploy:
+
+```bash
+npm run check
+```
+
 Neu muon test queue production-like:
 
 ```bash
