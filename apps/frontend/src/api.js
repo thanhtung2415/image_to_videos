@@ -1,4 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+export const API_BASE_URL = API_URL;
 
 export function getToken() {
   return localStorage.getItem('image_to_videos_token');
@@ -103,4 +104,21 @@ export function createProject(formData) {
     method: 'POST',
     body: formData
   });
+}
+
+export function reportProject(payload) {
+  return apiFetch('/content/reports', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function deleteAccount() {
+  return apiFetch('/account', {
+    method: 'DELETE'
+  });
+}
+
+export function getAccountExportUrl() {
+  return `${API_URL}/account/export`;
 }

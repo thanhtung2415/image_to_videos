@@ -140,7 +140,9 @@ textarea {
 }
 
 .primary-button,
-.ghost-button {
+.ghost-button,
+.danger-button,
+.ghost-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -163,6 +165,21 @@ textarea {
 
 .ghost-button {
   padding: 0 14px;
+}
+
+.danger-button {
+  border: 1px solid #dc2626;
+  background: #ffffff;
+  color: #dc2626;
+  padding: 0 14px;
+}
+
+.ghost-link {
+  min-height: 40px;
+  border: 1px solid #cbd5e1;
+  color: #1f2937;
+  padding: 0 12px;
+  text-decoration: none;
 }
 
 .icon-button {
@@ -307,6 +324,17 @@ textarea {
   margin-top: 12px;
   color: #64748b;
   font-size: 14px;
+}
+
+.button-stack,
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.button-stack {
+  display: grid;
 }
 
 .notification-list {

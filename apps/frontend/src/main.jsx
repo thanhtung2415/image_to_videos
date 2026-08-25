@@ -1,13 +1,29 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Activity, Film, ImagePlus, LoaderCircle, LogOut, Play, RefreshCcw, Shield, Sparkles, Upload } from 'lucide-react';
+import {
+  Activity,
+  Download,
+  Film,
+  Flag,
+  ImagePlus,
+  LoaderCircle,
+  LogOut,
+  Play,
+  RefreshCcw,
+  Shield,
+  Sparkles,
+  Trash2,
+  Upload
+} from 'lucide-react';
 import {
   clearSession,
   createCheckout,
   createProject,
+  deleteAccount,
   getAdminCostSummary,
   getAdminOverview,
   getAdminProviderHealth,
+  getAccountExportUrl,
   getProject,
   getProjects,
   getNotifications,
@@ -16,6 +32,7 @@ import {
   getStoredUser,
   login,
   register,
+  reportProject,
   saveSession
 } from './api.js';
 import './styles.css';
@@ -467,11 +484,107 @@ function AdminPanel() {
   );
 }
 
+function AccountPanel({ onDeleted }) {
+  const [message, setMessage] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleExport() {
+    const token = localStorage.getItem('image_to_videos_token');
+    const response = await fetch(getAccountExportUrl(), {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      setMessage('Khong the export du lieu.');
+      return;
+    }
+
+    const data = await response.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `account-export-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setMessage('Da export du lieu tai khoan.');
+  }
+
+  async function handleDelete() {
+    if (!window.confirm('Ban chac chan muon xoa tai khoan?')) {
+      return;
+    }
+
+    setDeleting(true);
+    setMessage('');
+
+    try {
+      await deleteAccount();
+      clearSession();
+      onDeleted();
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <section className="panel account-panel">
+      <div className="section-title">
+        <Shield size={22} />
+        <h2>Account controls</h2>
+      </div>
+
+      <div className="button-stack">
+        <button className="ghost-button" type="button" onClick={handleExport}>
+          <Download size={16} />
+          Export data
+        </button>
+        <button className="danger-button" disabled={deleting} type="button" onClick={handleDelete}>
+          {deleting ? <LoaderCircle className="spin" size={16} /> : <Trash2 size={16} />}
+          Delete account
+        </button>
+      </div>
+
+      {message && <div className="muted-message">{message}</div>}
+    </section>
+  );
+}
+
 function StatusBadge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
 }
 
 function ProjectCard({ project, onRefresh }) {
+  const [reporting, setReporting] = useState(false);
+  const [message, setMessage] = useState('');
+
+  async function handleReport() {
+    const reason = window.prompt('Ly do report video nay?');
+
+    if (!reason) {
+      return;
+    }
+
+    setReporting(true);
+    setMessage('');
+
+    try {
+      await reportProject({
+        projectId: project._id,
+        reason
+      });
+      setMessage('Da gui report.');
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setReporting(false);
+    }
+  }
+
   return (
     <article className="project-card">
       <div className="project-media">
@@ -492,6 +605,19 @@ function ProjectCard({ project, onRefresh }) {
           <span>{project.generationMode}</span>
           <span>{project.costCredits} credits</span>
           <span>{new Date(project.createdAt).toLocaleString('vi-VN')}</span>
+        </div>
+        {message && <div className="muted-message">{message}</div>}
+        <div className="card-actions">
+          {project.outputVideo?.url && (
+            <a className="ghost-link" href={project.outputVideo.url} download>
+              <Download size={16} />
+              Download
+            </a>
+          )}
+          <button className="ghost-button" disabled={reporting} type="button" onClick={handleReport}>
+            {reporting ? <LoaderCircle className="spin" size={16} /> : <Flag size={16} />}
+            Report
+          </button>
         </div>
         {project.status !== 'completed' && (
           <button className="ghost-button" type="button" onClick={() => onRefresh(project._id)}>
@@ -598,6 +724,7 @@ function Dashboard({ user, onLogout }) {
           <ProjectForm onCreated={handleCreated} />
           <PricingPanel onPurchased={handlePurchased} />
           <NotificationsPanel />
+          <AccountPanel onDeleted={onLogout} />
           {currentUser.role === 'admin' && <AdminPanel />}
         </div>
 
