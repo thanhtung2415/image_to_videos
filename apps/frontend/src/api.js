@@ -81,6 +81,17 @@ export function getNotifications() {
   return apiFetch('/notifications');
 }
 
+export function getNotificationPreferences() {
+  return apiFetch('/notifications/preferences/me');
+}
+
+export function updateNotificationPreferences(payload) {
+  return apiFetch('/notifications/preferences/me', {
+    method: 'PATCH',
+    body: JSON.stringify(payload)
+  });
+}
+
 export function getAdminOverview() {
   return apiFetch('/admin/overview');
 }

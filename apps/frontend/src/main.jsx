@@ -32,13 +32,15 @@ import {
   getProject,
   getProjects,
   getNotifications,
+  getNotificationPreferences,
   getProviders,
   getPricingPlans,
   getStoredUser,
   login,
   register,
   reportProject,
-  saveSession
+  saveSession,
+  updateNotificationPreferences
 } from './api.js';
 import './styles.css';
 
@@ -366,6 +368,8 @@ function PricingPanel({ onPurchased }) {
 
 function NotificationsPanel() {
   const [notifications, setNotifications] = useState([]);
+  const [preferences, setPreferences] = useState(null);
+  const [savingPreference, setSavingPreference] = useState('');
 
   async function loadNotifications() {
     try {
@@ -378,9 +382,29 @@ function NotificationsPanel() {
 
   useEffect(() => {
     loadNotifications();
+    getNotificationPreferences()
+      .then((result) => setPreferences(result.preferences))
+      .catch(() => setPreferences(null));
     const timer = window.setInterval(loadNotifications, 5000);
     return () => window.clearInterval(timer);
   }, []);
+
+  async function togglePreference(key) {
+    if (!preferences) {
+      return;
+    }
+
+    setSavingPreference(key);
+
+    try {
+      const result = await updateNotificationPreferences({
+        [key]: !preferences[key]
+      });
+      setPreferences(result.preferences);
+    } finally {
+      setSavingPreference('');
+    }
+  }
 
   return (
     <section className="panel notifications-panel">
@@ -399,6 +423,24 @@ function NotificationsPanel() {
           </article>
         ))}
       </div>
+
+      {preferences && (
+        <>
+          <div className="section-title compact">
+            <Shield size={20} />
+            <h3>Preferences</h3>
+          </div>
+
+          <div className="toggle-grid">
+            {['inAppEnabled', 'browserEnabled', 'emailEnabled', 'videoCompleted', 'paymentEvents', 'securityAlerts'].map((key) => (
+              <button className={preferences[key] ? 'toggle active' : 'toggle'} key={key} type="button" onClick={() => togglePreference(key)}>
+                {savingPreference === key ? <LoaderCircle className="spin" size={14} /> : null}
+                <span>{key}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </section>
   );
 }
