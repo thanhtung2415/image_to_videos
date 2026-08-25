@@ -14,7 +14,15 @@ export function createVideoFromImage({ imagePath, duration = 5, resolution = '12
   ensureDirectory(generatedRoot);
 
   const [width, height] = resolution.split('x').map(Number);
+  const fps = 30;
+  const totalFrames = duration * fps;
   const outputPath = path.join(generatedRoot, `video-${Date.now()}-${Math.round(Math.random() * 1e9)}.mp4`);
+  const motionFilter = [
+    `scale=${width * 2}:${height * 2}:force_original_aspect_ratio=increase`,
+    `crop=${width * 2}:${height * 2}`,
+    `zoompan=z='min(zoom+0.0015,1.18)':x='iw/2-(iw/zoom/2)+sin(on/28)*18':y='ih/2-(ih/zoom/2)+cos(on/32)*12':d=${totalFrames}:s=${width}x${height}:fps=${fps}`,
+    'format=yuv420p'
+  ].join(',');
 
   return new Promise((resolve, reject) => {
     ffmpeg()
@@ -22,8 +30,8 @@ export function createVideoFromImage({ imagePath, duration = 5, resolution = '12
       .inputOptions(['-loop 1'])
       .outputOptions([
         `-t ${duration}`,
-        `-vf scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2,format=yuv420p`,
-        '-r 30',
+        `-vf ${motionFilter}`,
+        `-r ${fps}`,
         '-movflags +faststart'
       ])
       .videoCodec('libx264')
