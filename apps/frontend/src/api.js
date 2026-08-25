@@ -5,6 +5,11 @@ export function getToken() {
   return localStorage.getItem('image_to_videos_token');
 }
 
+export function getProjectEventsUrl(id) {
+  const token = getToken();
+  return `${API_URL}/projects/${id}/events?token=${encodeURIComponent(token || '')}`;
+}
+
 export function saveSession({ token, user }) {
   localStorage.setItem('image_to_videos_token', token);
   localStorage.setItem('image_to_videos_user', JSON.stringify(user));

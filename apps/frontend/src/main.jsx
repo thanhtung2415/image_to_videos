@@ -24,6 +24,7 @@ import {
   getAdminOverview,
   getAdminProviderHealth,
   getAccountExportUrl,
+  getProjectEventsUrl,
   getProject,
   getProjects,
   getNotifications,
@@ -666,11 +667,33 @@ function Dashboard({ user, onLogout }) {
       return undefined;
     }
 
+    const eventSources = activeProjects.map((project) => {
+      const source = new EventSource(getProjectEventsUrl(project._id));
+
+      source.addEventListener('status', (event) => {
+        const data = JSON.parse(event.data);
+        setProjects((items) => items.map((item) => (item._id === project._id ? data.project : item)));
+
+        if (['completed', 'failed', 'cancelled'].includes(data.project.status)) {
+          source.close();
+        }
+      });
+
+      source.onerror = () => {
+        source.close();
+      };
+
+      return source;
+    });
+
     const timer = window.setInterval(() => {
       activeProjects.forEach((project) => refreshProject(project._id));
     }, 3000);
 
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      eventSources.forEach((source) => source.close());
+    };
   }, [activeProjects]);
 
   function handleLogout() {
