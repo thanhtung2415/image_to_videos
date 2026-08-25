@@ -27,6 +27,12 @@ function mapResolution(resolution) {
   return resolution === '1024x1024' ? '720p' : '720p';
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 export class FalProviderAdapter extends BaseProviderAdapter {
   constructor({ apiKey }) {
     super({
@@ -70,10 +76,10 @@ export class FalProviderAdapter extends BaseProviderAdapter {
     return fal.storage.upload(file);
   }
 
-  async createGeneration({ imagePath, mimeType, prompt, duration, resolution }) {
+  async createGeneration({ imagePath, mimeType, prompt, duration, resolution, onStatus }) {
     this.configure();
     const imageUrl = await this.uploadImage({ imagePath, mimeType });
-    const result = await fal.subscribe(FAL_FLUX_IMAGE_TO_VIDEO, {
+    const { request_id: requestId } = await fal.queue.submit(FAL_FLUX_IMAGE_TO_VIDEO, {
       input: {
         prompt,
         image_url: imageUrl,
@@ -82,15 +88,44 @@ export class FalProviderAdapter extends BaseProviderAdapter {
         duration: mapDuration(duration),
         generate_audio: false,
         safety_tolerance: 2
-      },
+      }
+    });
+
+    await onStatus?.({
+      requestId,
+      status: 'SUBMITTED'
+    });
+
+    let status = await fal.queue.status(FAL_FLUX_IMAGE_TO_VIDEO, {
+      requestId,
       logs: true
     });
 
+    while (!['COMPLETED', 'FAILED', 'CANCELLED'].includes(status.status)) {
+      await onStatus?.({
+        requestId,
+        status: status.status,
+        logs: status.logs || []
+      });
+      await sleep(5000);
+      status = await fal.queue.status(FAL_FLUX_IMAGE_TO_VIDEO, {
+        requestId,
+        logs: true
+      });
+    }
+
+    if (status.status !== 'COMPLETED') {
+      throw new Error(`fal.ai generation ${status.status.toLowerCase()}`);
+    }
+
+    const result = await fal.queue.result(FAL_FLUX_IMAGE_TO_VIDEO, {
+      requestId
+    });
+
     return {
-      requestId: result.requestId,
+      requestId: result.requestId || requestId,
       videoUrl: result.data?.video?.url,
       raw: result.data
     };
   }
 }
-

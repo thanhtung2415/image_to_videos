@@ -50,7 +50,12 @@ export async function runGenerationJob(jobId) {
         prompt: job.project.prompt,
         duration: job.duration,
         resolution: job.resolution,
-        model: job.model
+        model: job.model,
+        onStatus: async (update) => {
+          job.providerGenerationId = update.requestId || job.providerGenerationId;
+          job.progress = update.status === 'SUBMITTED' ? 30 : 50;
+          await job.save();
+        }
       });
 
       job.providerGenerationId = generation.requestId || '';
