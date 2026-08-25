@@ -7,3 +7,10 @@ export async function connectDatabase() {
   console.log('MongoDB connected');
 }
 
+export function getDatabaseStatus() {
+  return {
+    readyState: mongoose.connection.readyState,
+    connected: mongoose.connection.readyState === 1,
+    name: mongoose.connection.name || ''
+  };
+}

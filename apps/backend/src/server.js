@@ -10,6 +10,7 @@ import { accountRoutes } from './routes/accountRoutes.js';
 import { authRoutes } from './routes/authRoutes.js';
 import { contentRoutes } from './routes/contentRoutes.js';
 import { creditRoutes } from './routes/creditRoutes.js';
+import { healthRoutes } from './routes/healthRoutes.js';
 import { paymentRoutes } from './routes/paymentRoutes.js';
 import { providerRoutes } from './routes/providerRoutes.js';
 import { projectRoutes } from './routes/projectRoutes.js';
@@ -28,13 +29,7 @@ app.use(cors({ origin: env.frontendUrl, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 app.use('/media', express.static(path.resolve(__dirname, '../uploads')));
 
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'image-to-videos-api',
-    mode: env.nodeEnv
-  });
-});
+app.use('/api/health', healthRoutes);
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/account', accountRoutes);

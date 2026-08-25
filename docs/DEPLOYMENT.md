@@ -54,5 +54,4 @@ Dung Cloudinary. Khi backend co du 3 bien Cloudinary, video output se duoc uploa
 - `FRONTEND_URL` phai dung domain frontend deploy.
 - `PUBLIC_BACKEND_URL` phai dung domain backend deploy.
 - Bat `QUEUE_MODE=redis` khi deploy.
-- Kiem tra `/api/health` sau khi deploy backend.
-
+- Kiem tra `/api/health` va `/api/health/ready` sau khi deploy backend.

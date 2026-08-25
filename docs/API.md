@@ -2,6 +2,16 @@
 
 Base URL local: `http://localhost:4000/api`
 
+## Health
+
+### GET `/health`
+
+Kiem tra API dang song.
+
+### GET `/health/ready`
+
+Kiem tra MongoDB, queue, storage va provider config truoc khi demo/deploy.
+
 ## Auth
 
 ### POST `/auth/register`
