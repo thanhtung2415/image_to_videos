@@ -25,6 +25,13 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user'
     },
+    status: {
+      type: String,
+      enum: ['active', 'deleted'],
+      default: 'active',
+      index: true
+    },
+    deletedAt: Date,
     creditWallet: {
       availableCredit: {
         type: Number,
@@ -48,4 +55,3 @@ const userSchema = new mongoose.Schema(
 );
 
 export const User = mongoose.model('User', userSchema);
-

@@ -14,7 +14,7 @@ export async function requireAuth(req, res, next) {
     const payload = jwt.verify(token, env.jwtSecret);
     const user = await User.findById(payload.sub).select('-passwordHash');
 
-    if (!user) {
+    if (!user || user.status === 'deleted') {
       return res.status(401).json({ message: 'Tai khoan khong ton tai' });
     }
 
@@ -24,4 +24,3 @@ export async function requireAuth(req, res, next) {
     return res.status(401).json({ message: 'Phien dang nhap khong hop le' });
   }
 }
-

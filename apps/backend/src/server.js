@@ -6,6 +6,7 @@ import { ZodError } from 'zod';
 import { connectDatabase } from './config/database.js';
 import { env } from './config/env.js';
 import { adminRoutes } from './routes/adminRoutes.js';
+import { accountRoutes } from './routes/accountRoutes.js';
 import { authRoutes } from './routes/authRoutes.js';
 import { contentRoutes } from './routes/contentRoutes.js';
 import { creditRoutes } from './routes/creditRoutes.js';
@@ -36,6 +37,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/admin', adminRoutes);
+app.use('/api/account', accountRoutes);
 app.use('/api/auth', authRateLimit, authRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/credits', creditRoutes);
