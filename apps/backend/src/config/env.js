@@ -26,6 +26,10 @@ export const env = {
     luma: {
       apiKey: process.env.LUMA_API_KEY || ''
     }
+  },
+  payment: {
+    provider: process.env.PAYMENT_PROVIDER || 'mock',
+    webhookSecret: process.env.PAYMENT_WEBHOOK_SECRET || 'dev_webhook_secret'
   }
 };
 

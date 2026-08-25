@@ -7,8 +7,10 @@ import { connectDatabase } from './config/database.js';
 import { env } from './config/env.js';
 import { authRoutes } from './routes/authRoutes.js';
 import { creditRoutes } from './routes/creditRoutes.js';
+import { paymentRoutes } from './routes/paymentRoutes.js';
 import { providerRoutes } from './routes/providerRoutes.js';
 import { projectRoutes } from './routes/projectRoutes.js';
+import { pricingRoutes } from './routes/pricingRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +31,8 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/credits', creditRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/pricing', pricingRoutes);
 app.use('/api/providers', providerRoutes);
 app.use('/api/projects', projectRoutes);
 

@@ -3,10 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { Film, ImagePlus, LoaderCircle, LogOut, Play, RefreshCcw, Sparkles, Upload } from 'lucide-react';
 import {
   clearSession,
+  createCheckout,
   createProject,
   getProject,
   getProjects,
   getProviders,
+  getPricingPlans,
   getStoredUser,
   login,
   register,
@@ -274,6 +276,61 @@ function ProjectForm({ onCreated }) {
   );
 }
 
+function PricingPanel({ onPurchased }) {
+  const [plans, setPlans] = useState([]);
+  const [loadingPlan, setLoadingPlan] = useState('');
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    getPricingPlans()
+      .then((result) => setPlans(result.plans || []))
+      .catch(() => setPlans([]));
+  }, []);
+
+  async function handleBuy(planCode) {
+    setLoadingPlan(planCode);
+    setMessage('');
+
+    try {
+      const result = await createCheckout({
+        planCode,
+        idempotencyKey: `${planCode}-${crypto.randomUUID()}`
+      });
+      onPurchased(result.payment);
+      setMessage('Credit da duoc cong vao vi.');
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setLoadingPlan('');
+    }
+  }
+
+  return (
+    <section className="panel pricing-panel">
+      <div className="section-title">
+        <Sparkles size={22} />
+        <h2>Credit packages</h2>
+      </div>
+
+      <div className="plan-grid">
+        {plans.map((plan) => (
+          <article className="plan-card" key={plan.code}>
+            <strong>{plan.name}</strong>
+            <span>{plan.credits} credits</span>
+            <p>{plan.price.toLocaleString('vi-VN')} {plan.currency}</p>
+            <button className="ghost-button" disabled={loadingPlan === plan.code} type="button" onClick={() => handleBuy(plan.code)}>
+              {loadingPlan === plan.code ? <LoaderCircle className="spin" size={16} /> : <Sparkles size={16} />}
+              Buy
+            </button>
+          </article>
+        ))}
+      </div>
+
+      {message && <div className="muted-message">{message}</div>}
+    </section>
+  );
+}
+
 function StatusBadge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
 }
@@ -371,6 +428,17 @@ function Dashboard({ user, onLogout }) {
     }));
   }
 
+  function handlePurchased(payment) {
+    setCurrentUser((value) => ({
+      ...value,
+      creditWallet: {
+        ...value.creditWallet,
+        availableCredit: value.creditWallet.availableCredit + payment.credits,
+        lifetimePurchased: value.creditWallet.lifetimePurchased + payment.credits
+      }
+    }));
+  }
+
   return (
     <main className="dashboard">
       <header className="topbar">
@@ -390,7 +458,10 @@ function Dashboard({ user, onLogout }) {
       </header>
 
       <div className="layout">
-        <ProjectForm onCreated={handleCreated} />
+        <div className="sidebar-stack">
+          <ProjectForm onCreated={handleCreated} />
+          <PricingPanel onPurchased={handlePurchased} />
+        </div>
 
         <section className="panel history-panel">
           <div className="section-title">

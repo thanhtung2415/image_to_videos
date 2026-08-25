@@ -228,6 +228,12 @@ textarea {
   margin: 0 auto;
 }
 
+.sidebar-stack {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
 .panel {
   padding: 24px;
 }
@@ -273,6 +279,34 @@ textarea {
 .project-list {
   display: grid;
   gap: 14px;
+}
+
+.plan-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.plan-card {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid #d8e1ed;
+  border-radius: 8px;
+}
+
+.plan-card span {
+  color: #0f766e;
+  font-weight: 800;
+}
+
+.plan-card p {
+  margin-bottom: 4px;
+}
+
+.muted-message {
+  margin-top: 12px;
+  color: #64748b;
+  font-size: 14px;
 }
 
 .project-card {
@@ -401,4 +435,3 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
-

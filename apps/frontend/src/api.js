@@ -67,6 +67,17 @@ export function getProviders() {
   return apiFetch('/providers');
 }
 
+export function getPricingPlans() {
+  return apiFetch('/pricing/plans');
+}
+
+export function createCheckout(payload) {
+  return apiFetch('/payments/checkout', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
 export function getProject(id) {
   return apiFetch(`/projects/${id}`);
 }
