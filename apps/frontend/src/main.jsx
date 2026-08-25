@@ -306,7 +306,7 @@ function Dashboard({ user, onLogout }) {
       creditWallet: {
         ...value.creditWallet,
         availableCredit: value.creditWallet.availableCredit - project.costCredits,
-        lifetimeUsed: value.creditWallet.lifetimeUsed + project.costCredits
+        reservedCredit: value.creditWallet.reservedCredit + project.costCredits
       }
     }));
   }
@@ -368,4 +368,3 @@ createRoot(document.getElementById('root')).render(
     <App />
   </React.StrictMode>
 );
-

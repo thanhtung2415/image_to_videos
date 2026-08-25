@@ -1,6 +1,6 @@
 import { GenerationJob } from '../models/GenerationJob.js';
-import { User } from '../models/User.js';
 import { VideoProject } from '../models/VideoProject.js';
+import { captureReservedCredits, releaseReservedCredits } from './creditService.js';
 import { uploadVideo } from './storageService.js';
 import { createVideoFromImage } from './videoService.js';
 
@@ -10,15 +10,6 @@ async function updateJob(job, fields) {
   await VideoProject.findByIdAndUpdate(job.project, {
     status: fields.status,
     errorMessage: fields.errorMessage || ''
-  });
-}
-
-async function refundCredits(userId, amount) {
-  await User.findByIdAndUpdate(userId, {
-    $inc: {
-      'creditWallet.availableCredit': amount,
-      'creditWallet.lifetimeUsed': -amount
-    }
   });
 }
 
@@ -61,6 +52,14 @@ export async function runGenerationJob(jobId) {
       },
       errorMessage: ''
     });
+
+    await captureReservedCredits({
+      userId: job.user,
+      projectId: job.project._id,
+      jobId: job._id,
+      amount: job.costCredits,
+      idempotencyKey: `capture:${job._id}`
+    });
   } catch (error) {
     job.failedAt = new Date();
     await updateJob(job, {
@@ -68,6 +67,13 @@ export async function runGenerationJob(jobId) {
       progress: 100,
       errorMessage: error.message || 'Tao video that bai'
     });
-    await refundCredits(job.user, job.costCredits);
+    await releaseReservedCredits({
+      userId: job.user,
+      projectId: job.project._id,
+      jobId: job._id,
+      amount: job.costCredits,
+      idempotencyKey: `release:${job._id}`,
+      note: error.message || 'Generation failed'
+    });
   }
 }

@@ -6,6 +6,7 @@ import { ZodError } from 'zod';
 import { connectDatabase } from './config/database.js';
 import { env } from './config/env.js';
 import { authRoutes } from './routes/authRoutes.js';
+import { creditRoutes } from './routes/creditRoutes.js';
 import { projectRoutes } from './routes/projectRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,6 +27,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/credits', creditRoutes);
 app.use('/api/projects', projectRoutes);
 
 app.use((error, req, res, next) => {
@@ -58,4 +60,3 @@ connectDatabase()
     console.error('Cannot connect database', error);
     process.exit(1);
   });
-

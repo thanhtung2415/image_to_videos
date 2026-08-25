@@ -1,12 +1,12 @@
 import express from 'express';
 import { z } from 'zod';
 import { GenerationJob } from '../models/GenerationJob.js';
-import { User } from '../models/User.js';
 import { VideoProject } from '../models/VideoProject.js';
 import { requireAuth } from '../middleware/auth.js';
 import { imageUpload } from '../middleware/upload.js';
 import { env } from '../config/env.js';
 import { enqueueGeneration } from '../services/queueService.js';
+import { reserveCredits } from '../services/creditService.js';
 
 export const projectRoutes = express.Router();
 
@@ -36,16 +36,6 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
 
     const data = createProjectSchema.parse(req.body);
     const costCredits = 5;
-    const freshUser = await User.findById(req.user._id);
-
-    if (freshUser.creditWallet.availableCredit < costCredits) {
-      return res.status(402).json({ message: 'Khong du credit de tao video' });
-    }
-
-    freshUser.creditWallet.availableCredit -= costCredits;
-    freshUser.creditWallet.lifetimeUsed += costCredits;
-    await freshUser.save();
-
     const project = await VideoProject.create({
       user: req.user._id,
       title: data.title,
@@ -60,6 +50,20 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
         size: req.file.size
       }
     });
+
+    const reservation = await reserveCredits({
+      userId: req.user._id,
+      projectId: project._id,
+      amount: costCredits,
+      idempotencyKey: `reserve:${project._id}`
+    });
+
+    if (!reservation.ok) {
+      project.status = 'failed';
+      project.errorMessage = reservation.message;
+      await project.save();
+      return res.status(402).json({ message: reservation.message });
+    }
 
     const job = await GenerationJob.create({
       project: project._id,
