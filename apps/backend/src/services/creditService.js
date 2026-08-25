@@ -90,6 +90,36 @@ export async function purchaseCredits({ userId, paymentId, amount, idempotencyKe
   return user;
 }
 
+export async function refundPurchasedCredits({ userId, paymentId, amount, idempotencyKey }) {
+  const user = await User.findOneAndUpdate(
+    {
+      _id: userId,
+      'creditWallet.availableCredit': { $gte: amount }
+    },
+    {
+      $inc: {
+        'creditWallet.availableCredit': -amount,
+        'creditWallet.lifetimePurchased': -amount
+      }
+    },
+    { new: true }
+  );
+
+  if (!user) {
+    return null;
+  }
+
+  await createTransaction({
+    user,
+    type: 'refund',
+    amount,
+    idempotencyKey,
+    note: `Credit refund from payment ${paymentId}`
+  });
+
+  return user;
+}
+
 export async function captureReservedCredits({ userId, projectId, jobId, amount, idempotencyKey }) {
   const user = await User.findOneAndUpdate(
     {

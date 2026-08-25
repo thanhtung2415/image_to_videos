@@ -34,6 +34,18 @@ const paymentSchema = new mongoose.Schema(
       required: true,
       min: 0
     },
+    originalAmount: {
+      type: Number,
+      default: 0
+    },
+    discountAmount: {
+      type: Number,
+      default: 0
+    },
+    couponCode: {
+      type: String,
+      default: ''
+    },
     currency: {
       type: String,
       default: 'VND'
@@ -58,4 +70,3 @@ const paymentSchema = new mongoose.Schema(
 );
 
 export const Payment = mongoose.model('Payment', paymentSchema);
-

@@ -1,6 +1,8 @@
 import express from 'express';
+import { z } from 'zod';
 import { AuditLog } from '../models/AuditLog.js';
 import { ContentReport } from '../models/ContentReport.js';
+import { Coupon } from '../models/Coupon.js';
 import { GenerationJob } from '../models/GenerationJob.js';
 import { Payment } from '../models/Payment.js';
 import { User } from '../models/User.js';
@@ -13,6 +15,14 @@ import { listProviderHealth } from '../services/providerHealthService.js';
 export const adminRoutes = express.Router();
 
 adminRoutes.use(requireAuth, requireAdmin);
+
+const couponSchema = z.object({
+  code: z.string().min(3).max(40),
+  type: z.enum(['percent', 'fixed']).default('percent'),
+  value: z.coerce.number().min(0),
+  maxUses: z.coerce.number().min(0).default(0),
+  expiresAt: z.string().datetime().optional()
+});
 
 adminRoutes.get('/overview', async (req, res, next) => {
   try {
@@ -60,6 +70,32 @@ adminRoutes.get('/cost-summary', async (req, res, next) => {
   try {
     const summary = await getCostSummary();
     res.json({ summary });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.get('/coupons', async (req, res, next) => {
+  try {
+    const coupons = await Coupon.find().sort({ createdAt: -1 }).limit(100);
+    res.json({ coupons });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.post('/coupons', async (req, res, next) => {
+  try {
+    const data = couponSchema.parse(req.body);
+    const coupon = await Coupon.create({
+      code: data.code.toUpperCase(),
+      type: data.type,
+      value: data.value,
+      maxUses: data.maxUses,
+      expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined
+    });
+
+    res.status(201).json({ coupon });
   } catch (error) {
     next(error);
   }

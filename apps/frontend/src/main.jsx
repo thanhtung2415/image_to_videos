@@ -283,6 +283,7 @@ function ProjectForm({ onCreated }) {
 function PricingPanel({ onPurchased }) {
   const [plans, setPlans] = useState([]);
   const [loadingPlan, setLoadingPlan] = useState('');
+  const [couponCode, setCouponCode] = useState('');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -298,6 +299,7 @@ function PricingPanel({ onPurchased }) {
     try {
       const result = await createCheckout({
         planCode,
+        couponCode,
         idempotencyKey: `${planCode}-${crypto.randomUUID()}`
       });
       onPurchased(result.payment);
@@ -317,6 +319,11 @@ function PricingPanel({ onPurchased }) {
       </div>
 
       <div className="plan-grid">
+        <label>
+          Coupon
+          <input value={couponCode} onChange={(event) => setCouponCode(event.target.value)} placeholder="Optional code" />
+        </label>
+
         {plans.map((plan) => (
           <article className="plan-card" key={plan.code}>
             <strong>{plan.name}</strong>
