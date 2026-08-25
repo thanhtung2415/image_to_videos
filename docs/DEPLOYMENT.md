@@ -51,7 +51,7 @@ Dung Upstash Redis hoac Redis Cloud. Gan `REDIS_URL` cho ca API va worker.
 
 ## Storage
 
-Dung Cloudinary. Khi backend co du 3 bien Cloudinary, video output se duoc upload len Cloudinary.
+Dung Cloudinary. Khi backend co du 3 bien Cloudinary, video output tu FFmpeg va video AI remote tu fal.ai se duoc upload len Cloudinary.
 
 ## Email
 

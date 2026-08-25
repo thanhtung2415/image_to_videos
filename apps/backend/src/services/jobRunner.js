@@ -4,7 +4,7 @@ import { captureReservedCredits, releaseReservedCredits } from './creditService.
 import { recordCostEvent } from './costService.js';
 import { notifyUser } from './notificationService.js';
 import { getProvider } from './providers/providerRouter.js';
-import { uploadVideo } from './storageService.js';
+import { uploadRemoteVideo, uploadVideo } from './storageService.js';
 import { createVideoFromImage } from './videoService.js';
 
 async function updateJob(job, fields) {
@@ -78,10 +78,7 @@ export async function runGenerationJob(jobId) {
 
     const uploaded = outputPath
       ? await uploadVideo(outputPath)
-      : {
-          url: externalVideoUrl,
-          publicId: job.providerGenerationId
-        };
+      : await uploadRemoteVideo(externalVideoUrl, job.providerGenerationId);
 
     job.status = 'completed';
     job.progress = 100;

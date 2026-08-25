@@ -111,6 +111,7 @@ Coupon demo: `SALE20`.
 
 - AI Provider Router/Adapter skeleton cho fal.ai, Runway, Luma.
 - fal.ai FLUX 3 Image to Video adapter that bang `FAL_API_KEY`.
+- Video AI tu fal.ai se duoc upload ve Cloudinary neu storage da cau hinh.
 - Pricing Engine server-side voi cac goi Trial, Standard, Pro, Premium.
 - Payment abstraction mock, co Payment va PaymentEvent collections.
 - Credit reserve/capture/release va CreditTransaction collection.

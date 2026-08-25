@@ -37,6 +37,27 @@ export async function uploadVideo(videoPath) {
   };
 }
 
+export async function uploadRemoteVideo(videoUrl, fallbackPublicId = '') {
+  if (hasCloudinaryConfig()) {
+    const result = await cloudinary.uploader.upload(videoUrl, {
+      resource_type: 'video',
+      folder: 'image-to-videos/generated'
+    });
+
+    return {
+      url: result.secure_url,
+      publicId: result.public_id,
+      storedInCloudinary: true
+    };
+  }
+
+  return {
+    url: videoUrl,
+    publicId: fallbackPublicId,
+    storedInCloudinary: false
+  };
+}
+
 export function ensureDirectory(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
