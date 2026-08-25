@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { User } from '../models/User.js';
 import { requireAuth } from '../middleware/auth.js';
 import { signAccessToken } from '../services/tokenService.js';
+import { writeAuditLog } from '../services/auditService.js';
 
 export const authRoutes = express.Router();
 
@@ -44,6 +45,14 @@ authRoutes.post('/register', async (req, res, next) => {
       passwordHash
     });
 
+    await writeAuditLog({
+      actor: user._id,
+      action: 'auth.register',
+      resourceType: 'User',
+      resourceId: user._id.toString(),
+      req
+    });
+
     res.status(201).json({
       user: publicUser(user),
       token: signAccessToken(user)
@@ -62,6 +71,14 @@ authRoutes.post('/login', async (req, res, next) => {
       return res.status(401).json({ message: 'Email hoac mat khau khong dung' });
     }
 
+    await writeAuditLog({
+      actor: user._id,
+      action: 'auth.login',
+      resourceType: 'User',
+      resourceId: user._id.toString(),
+      req
+    });
+
     res.json({
       user: publicUser(user),
       token: signAccessToken(user)
@@ -74,4 +91,3 @@ authRoutes.post('/login', async (req, res, next) => {
 authRoutes.get('/me', requireAuth, (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
-

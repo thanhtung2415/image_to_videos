@@ -9,6 +9,8 @@ import { enqueueGeneration } from '../services/queueService.js';
 import { reserveCredits } from '../services/creditService.js';
 import { estimateProviderCost, getProvider } from '../services/providers/providerRouter.js';
 import { notifyUser } from '../services/notificationService.js';
+import { moderateProjectInput } from '../services/moderationService.js';
+import { writeAuditLog } from '../services/auditService.js';
 
 export const projectRoutes = express.Router();
 
@@ -40,6 +42,12 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
     }
 
     const data = createProjectSchema.parse(req.body);
+    const moderation = moderateProjectInput({ prompt: data.prompt, file: req.file });
+
+    if (!moderation.ok) {
+      return res.status(400).json({ message: moderation.message });
+    }
+
     const providerName = data.generationMode === 'ai' ? data.provider : 'ffmpeg';
     const modelName = data.generationMode === 'ai' ? data.model : 'ffmpeg-basic';
     const provider = data.generationMode === 'ai' ? getProvider(providerName) : null;
@@ -113,6 +121,19 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
       metadata: {
         projectId: project._id,
         jobId: job._id
+      }
+    });
+
+    await writeAuditLog({
+      actor: req.user._id,
+      action: 'project.create',
+      resourceType: 'VideoProject',
+      resourceId: project._id.toString(),
+      req,
+      metadata: {
+        generationMode: data.generationMode,
+        provider: providerName,
+        model: modelName
       }
     });
 
