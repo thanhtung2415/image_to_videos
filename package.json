@@ -12,6 +12,7 @@
     "dev:worker": "npm run dev:worker --workspace apps/backend",
     "dev:frontend": "npm run dev --workspace apps/frontend",
     "build": "npm run build --workspace apps/frontend",
+    "seed:demo": "npm run seed:demo --workspace apps/backend",
     "start": "npm run start --workspace apps/backend"
   }
 }

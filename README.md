@@ -72,6 +72,23 @@ npm run dev:worker
 
 Frontend mac dinh chay tai `http://localhost:5173`, backend tai `http://localhost:4000`.
 
+## Seed demo data
+
+Sau khi MongoDB da chay va `.env` da cau hinh, co the tao tai khoan demo:
+
+```bash
+npm run seed:demo
+```
+
+Tai khoan:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | admin@example.com | 123456 |
+| User | user@example.com | 123456 |
+
+Coupon demo: `SALE20`.
+
 ## Luong chuc nang
 
 1. Nguoi dung dang ky hoac dang nhap.
