@@ -107,6 +107,8 @@ Frontend mac dinh chay tai `http://localhost:5173`, backend tai `http://localhos
 
 Khi deploy backend, can cau hinh day du cac bien trong `apps/backend/.env.example`. Khong dua file `.env` that len GitHub.
 
+Huong dan chi tiet nam trong `docs/DEPLOYMENT.md`.
+
 ## Con can lam de production that
 
 - Noi API that cho fal.ai, Runway hoac Luma.
