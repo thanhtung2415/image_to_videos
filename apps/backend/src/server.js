@@ -11,6 +11,7 @@ import { paymentRoutes } from './routes/paymentRoutes.js';
 import { providerRoutes } from './routes/providerRoutes.js';
 import { projectRoutes } from './routes/projectRoutes.js';
 import { pricingRoutes } from './routes/pricingRoutes.js';
+import { notificationRoutes } from './routes/notificationRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,6 +32,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/credits', creditRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/providers', providerRoutes);

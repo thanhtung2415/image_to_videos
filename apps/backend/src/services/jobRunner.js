@@ -1,6 +1,7 @@
 import { GenerationJob } from '../models/GenerationJob.js';
 import { VideoProject } from '../models/VideoProject.js';
 import { captureReservedCredits, releaseReservedCredits } from './creditService.js';
+import { notifyUser } from './notificationService.js';
 import { uploadVideo } from './storageService.js';
 import { createVideoFromImage } from './videoService.js';
 
@@ -64,6 +65,17 @@ export async function runGenerationJob(jobId) {
       amount: job.costCredits,
       idempotencyKey: `capture:${job._id}`
     });
+
+    await notifyUser({
+      userId: job.user,
+      type: 'VIDEO_COMPLETED',
+      title: 'Video da tao xong',
+      message: 'Video cua ban da san sang de xem va tai xuong.',
+      metadata: {
+        projectId: job.project._id,
+        jobId: job._id
+      }
+    });
   } catch (error) {
     job.failedAt = new Date();
     await updateJob(job, {
@@ -78,6 +90,18 @@ export async function runGenerationJob(jobId) {
       amount: job.costCredits,
       idempotencyKey: `release:${job._id}`,
       note: error.message || 'Generation failed'
+    });
+
+    await notifyUser({
+      userId: job.user,
+      type: 'VIDEO_FAILED',
+      title: 'Tao video that bai',
+      message: 'He thong da hoan lai credit da reserve cho job nay.',
+      metadata: {
+        projectId: job.project._id,
+        jobId: job._id,
+        error: error.message
+      }
     });
   }
 }

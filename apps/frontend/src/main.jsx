@@ -7,6 +7,7 @@ import {
   createProject,
   getProject,
   getProjects,
+  getNotifications,
   getProviders,
   getPricingPlans,
   getStoredUser,
@@ -331,6 +332,45 @@ function PricingPanel({ onPurchased }) {
   );
 }
 
+function NotificationsPanel() {
+  const [notifications, setNotifications] = useState([]);
+
+  async function loadNotifications() {
+    try {
+      const result = await getNotifications();
+      setNotifications(result.notifications || []);
+    } catch {
+      setNotifications([]);
+    }
+  }
+
+  useEffect(() => {
+    loadNotifications();
+    const timer = window.setInterval(loadNotifications, 5000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <section className="panel notifications-panel">
+      <div className="section-title">
+        <RefreshCcw size={22} />
+        <h2>Notifications</h2>
+      </div>
+
+      {notifications.length === 0 && <div className="empty small">No notifications.</div>}
+
+      <div className="notification-list">
+        {notifications.slice(0, 5).map((item) => (
+          <article className="notification-item" key={item._id}>
+            <strong>{item.title}</strong>
+            <span>{item.message}</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function StatusBadge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
 }
@@ -461,6 +501,7 @@ function Dashboard({ user, onLogout }) {
         <div className="sidebar-stack">
           <ProjectForm onCreated={handleCreated} />
           <PricingPanel onPurchased={handlePurchased} />
+          <NotificationsPanel />
         </div>
 
         <section className="panel history-panel">

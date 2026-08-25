@@ -4,6 +4,7 @@ import { Payment } from '../models/Payment.js';
 import { PaymentEvent } from '../models/PaymentEvent.js';
 import { getPlanForCheckout } from './pricingService.js';
 import { purchaseCredits } from './creditService.js';
+import { notifyUser } from './notificationService.js';
 
 function createMockCheckoutUrl(paymentId) {
   return `${env.frontendUrl}?payment=mock-success&paymentId=${paymentId}`;
@@ -52,6 +53,16 @@ export async function createCheckout({ userId, planCode, idempotencyKey }) {
       amount: payment.credits,
       idempotencyKey: `purchase:${payment._id}`
     });
+
+    await notifyUser({
+      userId,
+      type: 'CREDIT_PURCHASED',
+      title: 'Credit da duoc cong',
+      message: `Ban da mua thanh cong ${payment.credits} credits.`,
+      metadata: {
+        paymentId: payment._id
+      }
+    });
   }
 
   return {
@@ -70,4 +81,3 @@ export async function recordPaymentEvent({ provider, eventType, providerEventId,
     rawBody
   });
 }
-

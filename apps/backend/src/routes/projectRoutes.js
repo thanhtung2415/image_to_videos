@@ -8,6 +8,7 @@ import { env } from '../config/env.js';
 import { enqueueGeneration } from '../services/queueService.js';
 import { reserveCredits } from '../services/creditService.js';
 import { estimateProviderCost, getProvider } from '../services/providers/providerRouter.js';
+import { notifyUser } from '../services/notificationService.js';
 
 export const projectRoutes = express.Router();
 
@@ -103,6 +104,17 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
     job.queueMode = queueInfo.mode;
     job.queueJobId = queueInfo.queueJobId;
     await job.save();
+
+    await notifyUser({
+      userId: req.user._id,
+      type: 'VIDEO_QUEUED',
+      title: 'Video da vao hang doi',
+      message: 'He thong dang xu ly video cua ban trong nen.',
+      metadata: {
+        projectId: project._id,
+        jobId: job._id
+      }
+    });
 
     res.status(201).json({ project, job });
   } catch (error) {

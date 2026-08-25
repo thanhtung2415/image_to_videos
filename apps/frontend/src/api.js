@@ -71,6 +71,10 @@ export function getPricingPlans() {
   return apiFetch('/pricing/plans');
 }
 
+export function getNotifications() {
+  return apiFetch('/notifications');
+}
+
 export function createCheckout(payload) {
   return apiFetch('/payments/checkout', {
     method: 'POST',
