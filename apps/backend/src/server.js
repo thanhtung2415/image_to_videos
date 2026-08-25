@@ -17,12 +17,14 @@ import { projectRoutes } from './routes/projectRoutes.js';
 import { pricingRoutes } from './routes/pricingRoutes.js';
 import { notificationRoutes } from './routes/notificationRoutes.js';
 import { apiRateLimit, authRateLimit, secureHeaders } from './middleware/security.js';
+import { requestLogger } from './middleware/requestLogger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
+app.use(requestLogger);
 app.use(secureHeaders);
 app.use(apiRateLimit);
 app.use(cors({ origin: env.frontendUrl, credentials: true }));

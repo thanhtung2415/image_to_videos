@@ -121,6 +121,7 @@ Coupon demo: `SALE20`.
 - Security headers, rate limit, content moderation co ban, audit log.
 - Admin API overview va audit log.
 - Provider health va cost tracking.
+- Request logging voi request id.
 - Coupon va refund mock.
 - Account data export va soft delete.
 

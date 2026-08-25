@@ -8,7 +8,9 @@ export async function writeAuditLog({ actor, action, resourceType, resourceId, r
     resourceId,
     ipAddress: req?.ip || '',
     userAgent: req?.headers?.['user-agent'] || '',
-    metadata
+    metadata: {
+      requestId: req?.requestId,
+      ...metadata
+    }
   });
 }
-
