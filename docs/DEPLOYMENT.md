@@ -75,3 +75,13 @@ npm run cleanup:local
 ```
 
 Mac dinh xoa file cu hon 7 ngay. Co the doi bang `LOCAL_FILE_MAX_AGE_DAYS`.
+
+## Backup database
+
+Export cac collection chinh ra JSON:
+
+```bash
+npm run backup:db
+```
+
+File backup duoc tao trong `apps/backend/backups` va khong duoc commit len GitHub.

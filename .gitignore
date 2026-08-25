@@ -6,7 +6,7 @@ build/
 !.env.example
 uploads/
 generated/
+backups/
 *.log
 .DS_Store
 Thumbs.db
-
