@@ -75,6 +75,18 @@ export function getNotifications() {
   return apiFetch('/notifications');
 }
 
+export function getAdminOverview() {
+  return apiFetch('/admin/overview');
+}
+
+export function getAdminProviderHealth() {
+  return apiFetch('/admin/provider-health');
+}
+
+export function getAdminCostSummary() {
+  return apiFetch('/admin/cost-summary');
+}
+
 export function createCheckout(payload) {
   return apiFetch('/payments/checkout', {
     method: 'POST',

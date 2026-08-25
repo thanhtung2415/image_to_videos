@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Film, ImagePlus, LoaderCircle, LogOut, Play, RefreshCcw, Sparkles, Upload } from 'lucide-react';
+import { Activity, Film, ImagePlus, LoaderCircle, LogOut, Play, RefreshCcw, Shield, Sparkles, Upload } from 'lucide-react';
 import {
   clearSession,
   createCheckout,
   createProject,
+  getAdminCostSummary,
+  getAdminOverview,
+  getAdminProviderHealth,
   getProject,
   getProjects,
   getNotifications,
@@ -371,6 +374,92 @@ function NotificationsPanel() {
   );
 }
 
+function AdminPanel() {
+  const [overview, setOverview] = useState(null);
+  const [health, setHealth] = useState([]);
+  const [costSummary, setCostSummary] = useState(null);
+  const [error, setError] = useState('');
+
+  async function loadAdminData() {
+    setError('');
+
+    try {
+      const [overviewResult, healthResult, costResult] = await Promise.all([
+        getAdminOverview(),
+        getAdminProviderHealth(),
+        getAdminCostSummary()
+      ]);
+      setOverview(overviewResult.overview);
+      setHealth(healthResult.health || []);
+      setCostSummary(costResult.summary);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  useEffect(() => {
+    loadAdminData();
+  }, []);
+
+  return (
+    <section className="panel admin-panel">
+      <div className="section-title">
+        <Shield size={22} />
+        <h2>Admin overview</h2>
+      </div>
+
+      {error && <div className="alert">{error}</div>}
+
+      {overview && (
+        <div className="metric-grid">
+          {Object.entries(overview).map(([key, value]) => (
+            <article className="metric-card" key={key}>
+              <span>{key}</span>
+              <strong>{value}</strong>
+            </article>
+          ))}
+        </div>
+      )}
+
+      <div className="section-title compact">
+        <Activity size={20} />
+        <h3>Provider health</h3>
+      </div>
+
+      <div className="provider-list">
+        {health.map((item) => (
+          <article className="provider-row" key={item.provider}>
+            <div>
+              <strong>{item.provider}</strong>
+              <span>{item.enabled ? 'enabled' : 'disabled'}</span>
+            </div>
+            <StatusBadge status={item.status} />
+          </article>
+        ))}
+      </div>
+
+      {costSummary && (
+        <>
+          <div className="section-title compact">
+            <Sparkles size={20} />
+            <h3>Cost tracking</h3>
+          </div>
+          <div className="metric-grid">
+            <article className="metric-card">
+              <span>events</span>
+              <strong>{costSummary.totals.events || 0}</strong>
+            </article>
+            <article className="metric-card">
+              <span>credits</span>
+              <strong>{costSummary.totals.credits || 0}</strong>
+            </article>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 function StatusBadge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
 }
@@ -502,6 +591,7 @@ function Dashboard({ user, onLogout }) {
           <ProjectForm onCreated={handleCreated} />
           <PricingPanel onPurchased={handlePurchased} />
           <NotificationsPanel />
+          {currentUser.role === 'admin' && <AdminPanel />}
         </div>
 
         <section className="panel history-panel">
