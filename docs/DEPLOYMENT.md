@@ -65,3 +65,13 @@ Neu co SMTP provider, cau hinh `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS
 - `PUBLIC_BACKEND_URL` phai dung domain backend deploy.
 - Bat `QUEUE_MODE=redis` khi deploy.
 - Kiem tra `/api/health` va `/api/health/ready` sau khi deploy backend.
+
+## Local storage lifecycle
+
+Neu chay local/dev va luu file trong `apps/backend/uploads`, co the don file cu:
+
+```bash
+npm run cleanup:local
+```
+
+Mac dinh xoa file cu hon 7 ngay. Co the doi bang `LOCAL_FILE_MAX_AGE_DAYS`.

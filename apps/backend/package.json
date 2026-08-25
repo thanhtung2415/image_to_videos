@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "dev:worker": "nodemon src/worker.js",
+    "cleanup:local": "node src/scripts/cleanupLocalFiles.js",
     "seed:demo": "node src/scripts/seedDemo.js",
     "worker": "node src/worker.js",
     "start": "node src/server.js"
