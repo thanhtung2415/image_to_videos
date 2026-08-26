@@ -127,6 +127,10 @@ export function getAdminCostSummary() {
   return apiFetch('/admin/cost-summary');
 }
 
+export function getAdminReportSummary(days = 30) {
+  return apiFetch(`/admin/reports/summary?days=${encodeURIComponent(days)}`);
+}
+
 export function getAdminVideoCosts() {
   return apiFetch('/admin/video-costs');
 }

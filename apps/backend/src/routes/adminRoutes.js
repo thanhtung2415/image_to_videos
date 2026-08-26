@@ -62,6 +62,13 @@ const videoCostSchema = z.object({
   modelCredits: z.record(z.string(), z.coerce.number().int().min(0)).optional()
 });
 
+function dateRangeFromQuery(req) {
+  const days = Math.min(365, Math.max(1, Number(req.query.days || 30)));
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  return { days, since };
+}
+
 function adminUser(user) {
   return {
     id: user._id,
@@ -220,6 +227,68 @@ adminRoutes.get('/cost-summary', async (req, res, next) => {
   try {
     const summary = await getCostSummary();
     res.json({ summary });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.get('/reports/summary', async (req, res, next) => {
+  try {
+    const { days, since } = dateRangeFromQuery(req);
+    const [
+      totalUsers,
+      newUsers,
+      successfulVideos,
+      failedVideos,
+      paidPayments,
+      creditsIssued,
+      creditsUsed,
+      promotionStats
+    ] = await Promise.all([
+      User.countDocuments({ status: { $ne: 'deleted' } }),
+      User.countDocuments({ createdAt: { $gte: since }, status: { $ne: 'deleted' } }),
+      VideoProject.countDocuments({ status: 'completed', createdAt: { $gte: since } }),
+      VideoProject.countDocuments({ status: 'failed', createdAt: { $gte: since } }),
+      Payment.aggregate([
+        { $match: { status: 'paid', paidAt: { $gte: since } } },
+        { $group: { _id: null, count: { $sum: 1 }, revenue: { $sum: '$amount' }, credits: { $sum: '$credits' } } }
+      ]),
+      CreditTransaction.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: since },
+            type: { $in: ['purchase', 'manual_adjustment', 'promotion_bonus'] },
+            amount: { $gt: 0 }
+          }
+        },
+        { $group: { _id: null, credits: { $sum: '$amount' } } }
+      ]),
+      CreditTransaction.aggregate([
+        { $match: { createdAt: { $gte: since }, type: 'capture' } },
+        { $group: { _id: null, credits: { $sum: '$amount' } } }
+      ]),
+      PromotionRegistration.aggregate([
+        { $match: { createdAt: { $gte: since } } },
+        { $group: { _id: '$code', registrations: { $sum: 1 }, credits: { $sum: '$creditBonus' } } },
+        { $sort: { registrations: -1 } }
+      ])
+    ]);
+
+    res.json({
+      report: {
+        days,
+        totalUsers,
+        newUsers,
+        successfulVideos,
+        failedVideos,
+        creditsIssued: creditsIssued[0]?.credits || 0,
+        creditsUsed: creditsUsed[0]?.credits || 0,
+        creditRevenue: paidPayments[0]?.revenue || 0,
+        paidPayments: paidPayments[0]?.count || 0,
+        purchasedCredits: paidPayments[0]?.credits || 0,
+        promotionStats
+      }
+    });
   } catch (error) {
     next(error);
   }

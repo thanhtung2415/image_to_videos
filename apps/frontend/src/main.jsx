@@ -33,6 +33,7 @@ import {
   getAdminUsers,
   getAdminPromotions,
   getAdminProviderHealth,
+  getAdminReportSummary,
   getAdminVideoCosts,
   getActivePromotions,
   getAccountExportUrl,
@@ -510,6 +511,7 @@ function AdminPanel() {
   const [overview, setOverview] = useState(null);
   const [health, setHealth] = useState([]);
   const [costSummary, setCostSummary] = useState(null);
+  const [reportSummary, setReportSummary] = useState(null);
   const [costSettings, setCostSettings] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [promotions, setPromotions] = useState([]);
@@ -537,7 +539,17 @@ function AdminPanel() {
     setError('');
 
     try {
-      const [overviewResult, healthResult, costResult, couponResult, reportResult, usersResult, promotionResult, costSettingsResult] = await Promise.all([
+      const [
+        overviewResult,
+        healthResult,
+        costResult,
+        couponResult,
+        reportResult,
+        usersResult,
+        promotionResult,
+        costSettingsResult,
+        reportSummaryResult
+      ] = await Promise.all([
         getAdminOverview(),
         getAdminProviderHealth(),
         getAdminCostSummary(),
@@ -545,7 +557,8 @@ function AdminPanel() {
         getAdminContentReports(),
         getAdminUsers(userSearch),
         getAdminPromotions(),
-        getAdminVideoCosts()
+        getAdminVideoCosts(),
+        getAdminReportSummary(30)
       ]);
       setOverview(overviewResult.overview);
       setHealth(healthResult.health || []);
@@ -554,6 +567,7 @@ function AdminPanel() {
       setReports(reportResult.reports || []);
       setUsers(usersResult.users || []);
       setPromotions(promotionResult.promotions || []);
+      setReportSummary(reportSummaryResult.report);
       setCostSettings(costSettingsResult.costs);
       setCostForm({
         ffmpegBaseCredits: String(costSettingsResult.costs.ffmpegBaseCredits),
@@ -719,6 +733,49 @@ function AdminPanel() {
             </article>
           ))}
         </div>
+      )}
+
+      {reportSummary && (
+        <>
+          <div className="section-title compact">
+            <Activity size={20} />
+            <h3>30 day report</h3>
+          </div>
+          <div className="metric-grid">
+            <article className="metric-card">
+              <span>new users</span>
+              <strong>{reportSummary.newUsers}</strong>
+            </article>
+            <article className="metric-card">
+              <span>successful videos</span>
+              <strong>{reportSummary.successfulVideos}</strong>
+            </article>
+            <article className="metric-card">
+              <span>failed videos</span>
+              <strong>{reportSummary.failedVideos}</strong>
+            </article>
+            <article className="metric-card">
+              <span>revenue</span>
+              <strong>{reportSummary.creditRevenue.toLocaleString('vi-VN')}</strong>
+            </article>
+            <article className="metric-card">
+              <span>credits issued</span>
+              <strong>{reportSummary.creditsIssued}</strong>
+            </article>
+            <article className="metric-card">
+              <span>credits used</span>
+              <strong>{reportSummary.creditsUsed}</strong>
+            </article>
+          </div>
+          <div className="compact-list">
+            {(reportSummary.promotionStats || []).slice(0, 3).map((promotion) => (
+              <article key={promotion._id}>
+                <strong>{promotion._id}</strong>
+                <span>{promotion.registrations} registrations - {promotion.credits} credits</span>
+              </article>
+            ))}
+          </div>
+        </>
       )}
 
       <div className="section-title compact">
