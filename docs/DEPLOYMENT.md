@@ -33,6 +33,7 @@ REDIS_URL=
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
+REPLICATE_API_TOKEN=
 FAL_API_KEY=
 SMTP_HOST=
 SMTP_PORT=587
@@ -51,7 +52,11 @@ Dung Upstash Redis hoac Redis Cloud. Gan `REDIS_URL` cho ca API va worker.
 
 ## Storage
 
-Dung Cloudinary. Khi backend co du 3 bien Cloudinary, video output tu FFmpeg va video AI remote tu fal.ai se duoc upload len Cloudinary.
+Dung Cloudinary. Khi backend co du 3 bien Cloudinary, video output tu FFmpeg va video AI remote tu Replicate/fal.ai se duoc upload len Cloudinary.
+
+## AI Provider
+
+Replicate `minimax/video-01` dung `REPLICATE_API_TOKEN` va phu hop de demo image-to-video neu tai khoan con quota/credit. Fal dung `FAL_API_KEY`, nhung co the bi gioi han neu tai khoan het balance.
 
 ## Email
 

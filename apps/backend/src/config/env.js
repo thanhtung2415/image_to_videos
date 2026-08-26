@@ -24,6 +24,10 @@ export const env = {
     fal: {
       apiKey: process.env.FAL_API_KEY || process.env.FAL_KEY || ''
     },
+    replicate: {
+      apiToken: process.env.REPLICATE_API_TOKEN || '',
+      minimaxVersion: process.env.REPLICATE_MINIMAX_VIDEO_VERSION || ''
+    },
     runway: {
       apiKey: process.env.RUNWAY_API_KEY || ''
     },

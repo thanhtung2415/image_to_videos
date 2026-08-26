@@ -1,8 +1,13 @@
 import { env } from '../../config/env.js';
 import { BaseProviderAdapter } from './BaseProviderAdapter.js';
 import { FalProviderAdapter } from './FalProviderAdapter.js';
+import { ReplicateProviderAdapter } from './ReplicateProviderAdapter.js';
 
 const providerAdapters = [
+  new ReplicateProviderAdapter({
+    apiToken: env.providers.replicate.apiToken,
+    minimaxVersion: env.providers.replicate.minimaxVersion
+  }),
   new FalProviderAdapter({ apiKey: env.providers.fal.apiKey }),
   new BaseProviderAdapter({
     name: 'runway',

@@ -159,10 +159,11 @@ function ProjectForm({ onCreated }) {
       .then((result) => {
         const providerList = result.providers || [];
         setProviders(providerList);
-        const firstFalModel = providerList.find((item) => item.name === 'fal')?.models?.[0]?.id;
+        const defaultProvider = providerList.find((item) => item.enabled) || providerList[0];
 
-        if (firstFalModel) {
-          setModel(firstFalModel);
+        if (defaultProvider) {
+          setProvider(defaultProvider.name);
+          setModel(defaultProvider.models?.[0]?.id || '');
         }
       })
       .catch(() => setProviders([]));

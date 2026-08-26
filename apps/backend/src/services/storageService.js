@@ -37,6 +37,29 @@ export async function uploadVideo(videoPath) {
   };
 }
 
+export async function uploadImage(imagePath) {
+  if (hasCloudinaryConfig()) {
+    const result = await cloudinary.uploader.upload(imagePath, {
+      resource_type: 'image',
+      folder: 'image-to-videos/source-images'
+    });
+
+    return {
+      url: result.secure_url,
+      publicId: result.public_id,
+      storedInCloudinary: true
+    };
+  }
+
+  const relativePath = path.relative(uploadsRoot, imagePath).replaceAll('\\', '/');
+
+  return {
+    url: `${env.publicBackendUrl}/media/${relativePath}`,
+    publicId: '',
+    storedInCloudinary: false
+  };
+}
+
 export async function uploadRemoteVideo(videoUrl, fallbackPublicId = '') {
   if (hasCloudinaryConfig()) {
     const result = await cloudinary.uploader.upload(videoUrl, {

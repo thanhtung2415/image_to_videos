@@ -21,7 +21,7 @@ const createProjectSchema = z.object({
   resolution: z.enum(['1280x720', '720x1280', '1024x1024']).default('1280x720'),
   generationMode: z.enum(['ffmpeg', 'ai']).default('ffmpeg'),
   provider: z.string().max(40).optional().default('ffmpeg'),
-  model: z.string().max(80).optional().default('ffmpeg-basic')
+  model: z.string().max(160).optional().default('ffmpeg-basic')
 });
 
 projectRoutes.use(requireAuth);

@@ -10,7 +10,7 @@ Website chuyen anh thanh video ngan theo SRS v2.0. Ban hien tai la Commercial MV
 | Backend | Node.js, Express |
 | Database | MongoDB Atlas hoac MongoDB local |
 | Storage | Local trong dev, Cloudinary khi cau hinh env |
-| Video engine | FFmpeg |
+| Video engine | FFmpeg, Replicate AI, fal.ai |
 | Queue | BullMQ + Redis khi `QUEUE_MODE=redis`, fallback local khi dev |
 | Auth | JWT |
 
@@ -95,23 +95,35 @@ Tai khoan:
 
 Coupon demo: `SALE20`.
 
+## Cau hinh AI
+
+FFmpeg la luong demo on dinh. Neu muon tao chuyen dong bang AI, cau hinh them:
+
+```bash
+REPLICATE_API_TOKEN=your_replicate_token
+FAL_API_KEY=your_fal_key
+```
+
+Replicate `minimax/video-01` duoc uu tien cho demo AI neu token kha dung. Fal van duoc giu lai nhung co the can balance/quota.
+
 ## Luong chuc nang
 
 1. Nguoi dung dang ky hoac dang nhap.
 2. He thong cap san 20 credits cho tai khoan moi.
 3. Nguoi dung upload anh JPG, PNG hoac WEBP toi da 5MB.
 4. Backend reserve credits va tao generation job.
-5. FFmpeg tao video MP4 tu anh.
-6. Khi video thanh cong, backend capture reserved credits.
-7. Neu job loi, backend release credits ve vi.
-8. Video duoc luu local neu chua cau hinh Cloudinary.
+5. Worker tao video bang FFmpeg hoac AI provider.
+6. Video output duoc upload len Cloudinary neu da cau hinh storage.
+7. Khi video thanh cong, backend capture reserved credits.
+8. Neu job loi, backend release credits ve vi.
 9. Frontend tu cap nhat trang thai job va hien video khi hoan tat.
 
 ## Da co theo SRS v2.0
 
-- AI Provider Router/Adapter skeleton cho fal.ai, Runway, Luma.
+- AI Provider Router/Adapter skeleton cho Replicate, fal.ai, Runway, Luma.
+- Replicate Minimax Video-01 adapter that bang `REPLICATE_API_TOKEN`.
 - fal.ai FLUX 3 Image to Video adapter that bang `FAL_API_KEY`.
-- Video AI tu fal.ai se duoc upload ve Cloudinary neu storage da cau hinh.
+- Video AI tu Replicate/fal.ai se duoc upload ve Cloudinary neu storage da cau hinh.
 - Pricing Engine server-side voi cac goi Trial, Standard, Pro, Premium.
 - Payment abstraction mock, co Payment va PaymentEvent collections.
 - Credit reserve/capture/release va CreditTransaction collection.
@@ -138,11 +150,11 @@ Khi deploy backend, can cau hinh day du cac bien trong `apps/backend/.env.exampl
 
 Huong dan chi tiet nam trong `docs/DEPLOYMENT.md`.
 
-Huong dan cau hinh AI provider fal.ai nam trong `docs/FAL_AI.md`.
+Huong dan cau hinh AI provider fal.ai nam trong `docs/FAL_AI.md`. Replicate dung bien `REPLICATE_API_TOKEN`.
 
 ## Con can lam de production that
 
-- Noi API that cho fal.ai, Runway hoac Luma.
+- Noi them API that cho Runway hoac Luma.
 - Bo sung adapter that cho Runway hoac Luma.
 - Noi payment that voi payOS hoac Stripe va verify webhook signature.
 - Tao admin UI day du.
