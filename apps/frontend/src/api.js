@@ -117,6 +117,18 @@ export function getAdminProviderHealth() {
 }
 
 export function getAdminUsers(search = '') {
+  if (typeof search === 'object') {
+    const params = new URLSearchParams();
+
+    Object.entries(search).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.set(key, value);
+      }
+    });
+
+    return apiFetch(`/admin/users${params.toString() ? `?${params}` : ''}`);
+  }
+
   const query = search ? `?search=${encodeURIComponent(search)}` : '';
   return apiFetch(`/admin/users${query}`);
 }
@@ -161,6 +173,17 @@ export function getAdminReportOverview({ from = '', to = '' } = {}) {
   return apiFetch(`/admin/reports/overview${query.toString() ? `?${query}` : ''}`);
 }
 
+export function getAdminSettings() {
+  return apiFetch('/admin/settings');
+}
+
+export function updateAdminSettings(payload) {
+  return apiFetch('/admin/settings', {
+    method: 'PATCH',
+    body: JSON.stringify(payload)
+  });
+}
+
 export function getAdminVideoCosts() {
   return apiFetch('/admin/video-costs');
 }
@@ -185,6 +208,14 @@ export function createAdminCoupon(payload) {
 
 export function getAdminPromotions() {
   return apiFetch('/admin/promotions');
+}
+
+export function getAdminPromotion(id) {
+  return apiFetch(`/admin/promotions/${id}`);
+}
+
+export function getAdminPromotionRegistrations(id) {
+  return apiFetch(`/admin/promotions/${id}/registrations`);
 }
 
 export function createAdminPromotion(payload) {
@@ -213,8 +244,24 @@ export function updateAdminContentReport(id, payload) {
 }
 
 export function getAdminVideos(status = '') {
+  if (typeof status === 'object') {
+    const params = new URLSearchParams();
+
+    Object.entries(status).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.set(key, value);
+      }
+    });
+
+    return apiFetch(`/admin/videos${params.toString() ? `?${params}` : ''}`);
+  }
+
   const query = status ? `?status=${encodeURIComponent(status)}` : '';
   return apiFetch(`/admin/videos${query}`);
+}
+
+export function getAdminVideo(id) {
+  return apiFetch(`/admin/videos/${id}`);
 }
 
 export function getAdminPricingPlans() {

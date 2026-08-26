@@ -23,6 +23,7 @@ Base URL local: `http://localhost:4000/api`
 | POST | `/promotions/:id/register` | Yes | User/Admin | Register a promotion by id. |
 | POST | `/promotions/register` | Yes | User/Admin | Register a promotion by code. |
 | GET | `/promotions/my-registrations` | Yes | User/Admin | Read user's promotion registration history. |
+| GET | `/providers` | Yes | User/Admin | Read default AI provider, provider status and model capabilities. |
 | GET | `/admin/users` | Yes | Admin | List/search/filter users with page, limit, search, status and role. |
 | GET | `/admin/users/:id` | Yes | Admin | Read user detail, transactions and projects. |
 | PATCH | `/admin/users/:id` | Yes | Admin | Update user profile/role/status. |

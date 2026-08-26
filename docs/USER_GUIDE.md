@@ -31,9 +31,9 @@ User demo bat dau voi 0 credit. Hay mua goi mock hoac nhap promotion code `WELCO
 3. Dung `User management` de tim user, doi role/status hoac cong/tru credit thu cong.
 4. Dung `Credit package management` de tao/bat/tat goi credit.
 5. Dung `Payment management` de xem payment va refund payment mock.
-6. Dung `Video review` de loc video failed/completed/queued.
-7. Dung `Video cost settings` de doi credit cost cho FFmpeg/AI.
-8. Dung `Coupon management` va `Promotion management` de tao ma giam gia/khuyen mai.
+6. Dung `Video review` de loc video failed/completed/queued va bam `View detail` de xem user, prompt, anh nguon, output video, engine, provider, model, error va job info.
+7. Dung `Video cost settings` de doi credit cost cho FFmpeg/AI; dung `System settings` de doi upload limit va provider mac dinh.
+8. Dung `Coupon management` va `Promotion management` de tao ma giam gia/khuyen mai; bam `Registrations` de xem user da dang ky promotion va tong credit da cap.
 9. Dung `Content reports` de review, resolve hoac dismiss report.
 10. Dung `Audit logs` de xem lai cac hanh dong quan trong trong he thong.
 

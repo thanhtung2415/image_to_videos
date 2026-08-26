@@ -33,11 +33,15 @@ import {
   getAdminOverview,
   getAdminPayments,
   getAdminPricingPlans,
+  getAdminPromotion,
+  getAdminPromotionRegistrations,
   getAdminUser,
   getAdminUsers,
   getAdminPromotions,
   getAdminProviderHealth,
   getAdminReportOverview,
+  getAdminSettings,
+  getAdminVideo,
   getAdminVideos,
   getAdminVideoCosts,
   getActivePromotions,
@@ -60,6 +64,7 @@ import {
   refundAdminPayment,
   saveSession,
   updateAdminContentReport,
+  updateAdminSettings,
   updateAdminPromotion,
   updateAdminUser,
   updateAdminPricingPlan,
@@ -196,7 +201,8 @@ function ProjectForm({ onCreated }) {
       .then((result) => {
         const providerList = result.providers || [];
         setProviders(providerList);
-        const defaultProvider = providerList.find((item) => item.enabled) || providerList[0];
+        const configuredDefault = providerList.find((item) => item.name === result.defaultProvider && item.enabled);
+        const defaultProvider = configuredDefault || providerList.find((item) => item.enabled) || providerList[0];
 
         if (defaultProvider) {
           setProvider(defaultProvider.name);
@@ -567,8 +573,12 @@ function AdminPanel() {
   const [promotions, setPromotions] = useState([]);
   const [reports, setReports] = useState([]);
   const [adminVideos, setAdminVideos] = useState([]);
+  const [selectedPromotion, setSelectedPromotion] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const [videoStatusFilter, setVideoStatusFilter] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [userStatusFilter, setUserStatusFilter] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState('');
   const [reportRange, setReportRange] = useState(() => {
     const to = new Date();
     const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -584,6 +594,7 @@ function AdminPanel() {
   const [userForm, setUserForm] = useState({ name: '', role: 'user', status: 'active' });
   const [creditForm, setCreditForm] = useState({ amount: '10', reason: 'Admin adjustment' });
   const [costForm, setCostForm] = useState({ ffmpegBaseCredits: '5', aiDefaultBaseCredits: '20', extraSecondCredits: '5' });
+  const [settingsForm, setSettingsForm] = useState({ maxFileSizeMb: '5', defaultProvider: 'ffmpeg' });
   const [planForm, setPlanForm] = useState({ code: 'starter', name: 'Starter', credits: '50', price: '25000', currency: 'VND', active: true, sortOrder: '5' });
   const [couponForm, setCouponForm] = useState({ code: 'SALE20', type: 'percent', value: '20', maxUses: '100' });
   const [promotionForm, setPromotionForm] = useState(() => ({
@@ -611,6 +622,7 @@ function AdminPanel() {
         usersResult,
         promotionResult,
         costSettingsResult,
+        adminSettingsResult,
         reportSummaryResult,
         adminVideosResult,
         pricingPlansResult,
@@ -625,6 +637,7 @@ function AdminPanel() {
         getAdminUsers(userSearch),
         getAdminPromotions(),
         getAdminVideoCosts(),
+        getAdminSettings(),
         getAdminReportOverview(reportRange),
         getAdminVideos(videoStatusFilter),
         getAdminPricingPlans(),
@@ -648,6 +661,10 @@ function AdminPanel() {
         ffmpegBaseCredits: String(costSettingsResult.costs.ffmpegBaseCredits),
         aiDefaultBaseCredits: String(costSettingsResult.costs.aiDefaultBaseCredits),
         extraSecondCredits: String(costSettingsResult.costs.extraSecondCredits)
+      });
+      setSettingsForm({
+        maxFileSizeMb: String(adminSettingsResult.settings.upload?.maxFileSizeMb ?? 5),
+        defaultProvider: adminSettingsResult.settings.provider?.default || 'ffmpeg'
       });
     } catch (err) {
       setError(err.message);
@@ -714,6 +731,26 @@ function AdminPanel() {
     }
   }
 
+  async function handleSelectPromotion(promotionId) {
+    setMessage('');
+    setError('');
+
+    try {
+      const [detailResult, registrationsResult] = await Promise.all([
+        getAdminPromotion(promotionId),
+        getAdminPromotionRegistrations(promotionId)
+      ]);
+
+      setSelectedPromotion({
+        ...detailResult,
+        registrations: registrationsResult.registrations || [],
+        summary: registrationsResult.summary || { registrations: 0, creditsGranted: 0 }
+      });
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function handleCreatePlan(event) {
     event.preventDefault();
     setMessage('');
@@ -751,7 +788,11 @@ function AdminPanel() {
     setError('');
 
     try {
-      const result = await getAdminUsers(userSearch);
+      const result = await getAdminUsers({
+        search: userSearch,
+        status: userStatusFilter,
+        role: userRoleFilter
+      });
       setUsers(result.users || []);
     } catch (err) {
       setError(err.message);
@@ -819,6 +860,10 @@ function AdminPanel() {
     setError('');
 
     try {
+      if (!window.confirm(`Adjust ${creditForm.amount} credits for ${selectedUser.user.email}?`)) {
+        return;
+      }
+
       const result = await adjustAdminUserCredits(selectedUser.user.id, {
         amount: Number(creditForm.amount),
         reason: creditForm.reason
@@ -826,6 +871,31 @@ function AdminPanel() {
       await handleSelectUser(result.user.id);
       setUsers((items) => items.map((item) => (item.id === result.user.id ? result.user : item)));
       setMessage('Credit adjusted.');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleUpdateSystemSettings(event) {
+    event.preventDefault();
+    setMessage('');
+    setError('');
+
+    try {
+      const result = await updateAdminSettings({
+        upload: {
+          maxFileSizeMb: Number(settingsForm.maxFileSizeMb)
+        },
+        provider: {
+          default: settingsForm.defaultProvider
+        }
+      });
+
+      setSettingsForm({
+        maxFileSizeMb: String(result.settings.upload?.maxFileSizeMb ?? 5),
+        defaultProvider: result.settings.provider?.default || 'ffmpeg'
+      });
+      setMessage('System settings updated.');
     } catch (err) {
       setError(err.message);
     }
@@ -857,6 +927,18 @@ function AdminPanel() {
     try {
       const result = await getAdminVideos(nextStatus);
       setAdminVideos(result.videos || []);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleSelectVideo(videoId) {
+    setMessage('');
+    setError('');
+
+    try {
+      const result = await getAdminVideo(videoId);
+      setSelectedVideo(result);
     } catch (err) {
       setError(err.message);
     }
@@ -1031,6 +1113,24 @@ function AdminPanel() {
           onChange={(event) => setUserSearch(event.target.value)}
           placeholder="Search name or email"
         />
+        <div className="form-grid">
+          <label>
+            Status
+            <select value={userStatusFilter} onChange={(event) => setUserStatusFilter(event.target.value)}>
+              <option value="">all</option>
+              <option value="active">active</option>
+              <option value="locked">locked</option>
+            </select>
+          </label>
+          <label>
+            Role
+            <select value={userRoleFilter} onChange={(event) => setUserRoleFilter(event.target.value)}>
+              <option value="">all</option>
+              <option value="user">user</option>
+              <option value="admin">admin</option>
+            </select>
+          </label>
+        </div>
         <button className="ghost-button" type="submit">
           Search users
         </button>
@@ -1230,10 +1330,54 @@ function AdminPanel() {
           <article key={video._id}>
             <strong>{video.title}</strong>
             <span>{video.user?.email || 'unknown user'} - {video.status} - {video.costCredits} credits</span>
+            <span>{video.generationMode} / {video.provider} / {video.model}</span>
             {video.errorMessage && <span>{video.errorMessage}</span>}
+            <button className="ghost-button small-action" type="button" onClick={() => handleSelectVideo(video._id)}>
+              View detail
+            </button>
           </article>
         ))}
       </div>
+
+      {selectedVideo && (
+        <div className="admin-detail-box">
+          <div className="detail-header">
+            <div>
+              <strong>{selectedVideo.video.title}</strong>
+              <span>{selectedVideo.video.user?.email || 'unknown user'} - {selectedVideo.video.status}</span>
+            </div>
+            <StatusBadge status={selectedVideo.video.status} />
+          </div>
+
+          <div className="admin-media-grid">
+            {selectedVideo.video.sourceImage?.url && (
+              <figure>
+                <img src={selectedVideo.video.sourceImage.url} alt="Source" />
+                <figcaption>Source image</figcaption>
+              </figure>
+            )}
+            {selectedVideo.video.outputVideo?.url && (
+              <figure>
+                <video controls src={selectedVideo.video.outputVideo.url} />
+                <figcaption>Output video</figcaption>
+              </figure>
+            )}
+          </div>
+
+          <div className="detail-grid">
+            <div><span>Prompt</span><strong>{selectedVideo.video.prompt || 'N/A'}</strong></div>
+            <div><span>Engine</span><strong>{selectedVideo.video.generationMode}</strong></div>
+            <div><span>Provider</span><strong>{selectedVideo.video.provider}</strong></div>
+            <div><span>Model</span><strong>{selectedVideo.video.model}</strong></div>
+            <div><span>Credit Cost</span><strong>{selectedVideo.video.costCredits}</strong></div>
+            <div><span>Resolution</span><strong>{selectedVideo.video.outputVideo?.resolution || selectedVideo.job?.resolution || 'N/A'}</strong></div>
+            <div><span>Created</span><strong>{new Date(selectedVideo.video.createdAt).toLocaleString('vi-VN')}</strong></div>
+            <div><span>Completed</span><strong>{selectedVideo.job?.completedAt ? new Date(selectedVideo.job.completedAt).toLocaleString('vi-VN') : 'N/A'}</strong></div>
+            <div><span>Provider Request</span><strong>{selectedVideo.job?.providerGenerationId || 'N/A'}</strong></div>
+            <div><span>Error</span><strong>{selectedVideo.video.errorMessage || selectedVideo.job?.errorMessage || 'N/A'}</strong></div>
+          </div>
+        </div>
+      )}
 
       {costSummary && (
         <>
@@ -1292,6 +1436,41 @@ function AdminPanel() {
             </label>
             <button className="ghost-button" type="submit">
               Save costs
+            </button>
+          </form>
+
+          <form className="admin-form" onSubmit={handleUpdateSystemSettings}>
+            <div className="section-title compact">
+              <Sparkles size={20} />
+              <h3>System settings</h3>
+            </div>
+            <div className="form-grid">
+              <label>
+                Max upload MB
+                <input
+                  min="1"
+                  max="100"
+                  type="number"
+                  value={settingsForm.maxFileSizeMb}
+                  onChange={(event) => setSettingsForm({ ...settingsForm, maxFileSizeMb: event.target.value })}
+                />
+              </label>
+              <label>
+                Default provider
+                <select
+                  value={settingsForm.defaultProvider}
+                  onChange={(event) => setSettingsForm({ ...settingsForm, defaultProvider: event.target.value })}
+                >
+                  <option value="ffmpeg">ffmpeg</option>
+                  <option value="replicate">replicate</option>
+                  <option value="fal">fal</option>
+                  <option value="runway">runway</option>
+                  <option value="luma">luma</option>
+                </select>
+              </label>
+            </div>
+            <button className="ghost-button" type="submit">
+              Save settings
             </button>
           </form>
         </>
@@ -1402,12 +1581,40 @@ function AdminPanel() {
             <span>End: {new Date(promotion.endsAt || promotion.endAt).toLocaleDateString('vi-VN')}</span>
             <span>Bonus Credit: {promotion.creditBonus || promotion.bonusCredit}</span>
             <span>Registrations: {promotion.currentRegistrations ?? promotion.registeredCount}/{promotion.maxRegistrations || '∞'} - {promotion.status}</span>
-            <button className="ghost-button small-action" type="button" onClick={() => handleTogglePromotion(promotion)}>
-              {promotion.status === 'active' ? 'Disable' : 'Enable'}
-            </button>
+            <div className="button-stack">
+              <button className="ghost-button small-action" type="button" onClick={() => handleSelectPromotion(promotion._id)}>
+                Registrations
+              </button>
+              <button className="ghost-button small-action" type="button" onClick={() => handleTogglePromotion(promotion)}>
+                {promotion.status === 'active' ? 'Disable' : 'Enable'}
+              </button>
+            </div>
           </article>
         ))}
       </div>
+
+      {selectedPromotion && (
+        <div className="admin-detail-box">
+          <div className="detail-header">
+            <div>
+              <strong>{selectedPromotion.promotion.name} ({selectedPromotion.promotion.code})</strong>
+              <span>{selectedPromotion.summary.registrations} registrations - {selectedPromotion.summary.creditsGranted} credits granted</span>
+            </div>
+            <StatusBadge status={selectedPromotion.promotion.status} />
+          </div>
+
+          <div className="compact-list">
+            {selectedPromotion.registrations.length === 0 && <div className="empty small">No registrations.</div>}
+            {selectedPromotion.registrations.map((registration) => (
+              <article key={registration._id}>
+                <strong>{registration.user?.name || 'Unknown user'}</strong>
+                <span>{registration.user?.email || 'unknown email'} - +{registration.creditGranted || registration.creditBonus} credits - {registration.status}</span>
+                <span>{new Date(registration.registeredAt || registration.createdAt).toLocaleString('vi-VN')}</span>
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="section-title compact">
         <Flag size={20} />

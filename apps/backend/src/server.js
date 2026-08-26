@@ -79,7 +79,7 @@ app.use((error, req, res, next) => {
   }
 
   if (error.code === 'LIMIT_FILE_SIZE') {
-    return res.status(400).json({ message: 'Anh toi da 5MB' });
+    return res.status(400).json({ message: 'Anh vuot qua gioi han upload' });
   }
 
   if (error.code === 11000) {

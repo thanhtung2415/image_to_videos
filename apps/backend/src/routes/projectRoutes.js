@@ -1,4 +1,5 @@
 import express from 'express';
+import fs from 'fs/promises';
 import { z } from 'zod';
 import { GenerationJob } from '../models/GenerationJob.js';
 import { VideoProject } from '../models/VideoProject.js';
@@ -8,7 +9,7 @@ import { env } from '../config/env.js';
 import { cancelQueuedGeneration, enqueueGeneration } from '../services/queueService.js';
 import { releaseReservedCredits, reserveCredits } from '../services/creditService.js';
 import { getProvider } from '../services/providers/providerRouter.js';
-import { estimateVideoCost } from '../services/settingService.js';
+import { estimateVideoCost, getSystemSettings } from '../services/settingService.js';
 import { notifyUser } from '../services/notificationService.js';
 import { moderateProjectInput } from '../services/moderationService.js';
 import { writeAuditLog } from '../services/auditService.js';
@@ -43,6 +44,15 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
     }
 
     const data = createProjectSchema.parse(req.body);
+    const systemSettings = await getSystemSettings();
+    const maxFileSizeMb = Number(systemSettings.upload?.maxFileSizeMb || 5);
+    const maxFileSizeBytes = maxFileSizeMb * 1024 * 1024;
+
+    if (req.file.size > maxFileSizeBytes) {
+      await fs.unlink(req.file.path).catch(() => {});
+      return res.status(400).json({ message: `Anh toi da ${maxFileSizeMb}MB` });
+    }
+
     const moderation = moderateProjectInput({ prompt: data.prompt, file: req.file });
 
     if (!moderation.ok) {

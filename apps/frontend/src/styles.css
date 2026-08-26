@@ -436,6 +436,80 @@ textarea {
   border-top: 1px solid #d8e1ed;
 }
 
+.admin-detail-box {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #d8e1ed;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.detail-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detail-header div {
+  display: grid;
+  gap: 4px;
+}
+
+.detail-header span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.admin-media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-media-grid figure {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.admin-media-grid img,
+.admin-media-grid video {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 6px;
+  background: #e2e8f0;
+  object-fit: cover;
+}
+
+.admin-media-grid figcaption,
+.detail-grid span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.detail-grid div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #d8e1ed;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.detail-grid strong {
+  overflow-wrap: anywhere;
+}
+
 .profile-summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -635,6 +709,11 @@ textarea {
   }
 
   .profile-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-media-grid,
+  .detail-grid {
     grid-template-columns: 1fr;
   }
 }

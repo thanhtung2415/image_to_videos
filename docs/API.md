@@ -107,7 +107,7 @@ SSE endpoint de theo doi trang thai job theo thoi gian thuc.
 
 ### GET `/providers`
 
-Lay danh sach AI providers, trang thai cau hinh va model capabilities.
+Lay provider mac dinh, danh sach AI providers, trang thai cau hinh va model capabilities.
 
 Provider `fal` se enabled khi backend co `FAL_API_KEY` hoac `FAL_KEY`.
 
@@ -238,7 +238,7 @@ Lay cau hinh `videoGeneration`, `upload` va `provider`.
 
 ### PATCH `/admin/settings`
 
-Cap nhat cau hinh he thong va ghi audit log.
+Cap nhat cau hinh he thong va ghi audit log. Backend dung `upload.maxFileSizeMb` lam gioi han upload that va dung `provider.default` de goi y provider mac dinh cho frontend.
 
 ### GET `/admin/users?page=1&limit=50&search=demo&status=active&role=user`
 

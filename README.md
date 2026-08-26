@@ -113,7 +113,7 @@ Replicate `minimax/video-01` duoc uu tien cho demo AI neu token kha dung. Fal va
 1. Nguoi dung dang ky hoac dang nhap.
 2. Tai khoan moi co 0 credit neu khong co promotion hop le.
 3. Khi dang ky, user co the nhap promotion code de nhan credit bonus neu promotion con hieu luc.
-4. Nguoi dung upload anh JPG, PNG hoac WEBP toi da 5MB.
+4. Nguoi dung upload anh JPG, PNG hoac WEBP theo gioi han upload do Admin cau hinh, mac dinh 5MB.
 5. Backend reserve credits va tao generation job.
 6. Worker tao video bang FFmpeg hoac AI provider.
 7. Video output duoc upload len Cloudinary neu da cau hinh storage.
@@ -136,7 +136,7 @@ Replicate `minimax/video-01` duoc uu tien cho demo AI neu token kha dung. Fal va
 - Security headers, rate limit, content moderation co ban, audit log.
 - User profile update, password change, account export va soft delete.
 - Admin dashboard quan ly user, lock/unlock, role, manual credit adjustment.
-- Admin tao/sua goi credit, xem payment, tao promotion, coupon, cau hinh video cost, xem report tong hop 30 ngay.
+- Admin tao/sua goi credit, xem payment, tao promotion, xem promotion registrations, coupon, cau hinh video cost, upload/provider settings, xem video detail va report tong hop 30 ngay.
 - Admin API overview va audit log.
 - Provider health va cost tracking.
 - Request logging voi request id.
