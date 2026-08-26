@@ -629,7 +629,7 @@ function NotificationsPanel() {
   );
 }
 
-function AdminPanel() {
+function AdminPanel({ activeSection }) {
   const [overview, setOverview] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
   const [creditTransactions, setCreditTransactions] = useState([]);
@@ -748,6 +748,18 @@ function AdminPanel() {
   useEffect(() => {
     loadAdminData();
   }, []);
+
+  useEffect(() => {
+    if (!activeSection?.startsWith('admin')) {
+      return;
+    }
+
+    const target = document.querySelector(`[data-admin-section="${activeSection}"]`);
+
+    if (target) {
+      window.requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  }, [activeSection]);
 
   async function handleCreateCoupon(event) {
     event.preventDefault();
@@ -1079,7 +1091,7 @@ function AdminPanel() {
 
   return (
     <section className="panel admin-panel">
-      <div className="section-title">
+      <div className="section-title admin-anchor" data-admin-section="admin-dashboard">
         <Shield size={22} />
         <h2>Admin overview</h2>
       </div>
@@ -1100,7 +1112,7 @@ function AdminPanel() {
 
       {reportSummary && (
         <>
-          <div className="section-title compact">
+          <div className="section-title compact admin-anchor" data-admin-section="admin-reports">
             <Activity size={20} />
             <h3>Reports</h3>
           </div>
@@ -1176,7 +1188,7 @@ function AdminPanel() {
         </>
       )}
 
-      <div className="section-title compact">
+      <div className="section-title compact admin-anchor" data-admin-section="admin-audit">
         <Activity size={20} />
         <h3>Audit logs</h3>
       </div>
@@ -1191,7 +1203,7 @@ function AdminPanel() {
         ))}
       </div>
 
-      <div className="section-title compact">
+      <div className="section-title compact admin-anchor" data-admin-section="admin-credits">
         <Sparkles size={20} />
         <h3>Credit transaction history</h3>
       </div>
@@ -1221,7 +1233,7 @@ function AdminPanel() {
         ))}
       </div>
 
-      <div className="section-title compact">
+      <div className="section-title compact admin-anchor" data-admin-section="admin-users">
         <Shield size={20} />
         <h3>User management</h3>
       </div>
@@ -1395,7 +1407,7 @@ function AdminPanel() {
         ))}
       </div>
 
-      <div className="section-title compact">
+      <div className="section-title compact admin-anchor" data-admin-section="admin-payments">
         <Sparkles size={20} />
         <h3>Payment management</h3>
       </div>
@@ -1426,7 +1438,7 @@ function AdminPanel() {
         ))}
       </div>
 
-      <div className="section-title compact">
+      <div className="section-title compact admin-anchor" data-admin-section="admin-videos">
         <Film size={20} />
         <h3>Video review</h3>
       </div>
@@ -1559,7 +1571,7 @@ function AdminPanel() {
           </form>
 
           <form className="admin-form" onSubmit={handleUpdateSystemSettings}>
-            <div className="section-title compact">
+            <div className="section-title compact admin-anchor" data-admin-section="admin-settings">
               <Sparkles size={20} />
               <h3>System settings</h3>
             </div>
@@ -1638,7 +1650,7 @@ function AdminPanel() {
         ))}
       </div>
 
-      <div className="section-title compact">
+      <div className="section-title compact admin-anchor" data-admin-section="admin-promotions">
         <Sparkles size={20} />
         <h3>Promotion management</h3>
       </div>
@@ -2453,7 +2465,7 @@ function Dashboard({ user, onLogout }) {
         </header>
 
         <div className={`layout ${isAdmin ? 'admin-layout' : ''}`}>
-          {isAdmin ? <AdminPanel /> : renderUserPage()}
+          {isAdmin ? <AdminPanel activeSection={activeView} /> : renderUserPage()}
         </div>
       </section>
     </main>

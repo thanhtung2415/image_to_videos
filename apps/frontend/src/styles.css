@@ -586,6 +586,10 @@ textarea {
   margin-bottom: 12px;
 }
 
+.admin-anchor {
+  scroll-margin-top: 24px;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
