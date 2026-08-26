@@ -43,6 +43,7 @@ import {
   getActivePromotions,
   getCreditTransactions,
   getCreditWallet,
+  getCurrentUser,
   getAccountExportUrl,
   getProjectEventsUrl,
   getProject,
@@ -1396,8 +1397,11 @@ function AdminPanel() {
       <div className="compact-list">
         {promotions.slice(0, 5).map((promotion) => (
           <article key={promotion._id}>
-            <strong>{promotion.code}</strong>
-            <span>{promotion.creditBonus} credits - {promotion.status} - used {promotion.registeredCount}/{promotion.maxRegistrations || '∞'}</span>
+            <strong>{promotion.name} ({promotion.code})</strong>
+            <span>Start: {new Date(promotion.startsAt || promotion.startAt).toLocaleDateString('vi-VN')}</span>
+            <span>End: {new Date(promotion.endsAt || promotion.endAt).toLocaleDateString('vi-VN')}</span>
+            <span>Bonus Credit: {promotion.creditBonus || promotion.bonusCredit}</span>
+            <span>Registrations: {promotion.currentRegistrations ?? promotion.registeredCount}/{promotion.maxRegistrations || '∞'} - {promotion.status}</span>
             <button className="ghost-button small-action" type="button" onClick={() => handleTogglePromotion(promotion)}>
               {promotion.status === 'active' ? 'Disable' : 'Enable'}
             </button>
@@ -1527,7 +1531,34 @@ function AccountPanel({ user, onUpdated, onDeleted }) {
     <section className="panel account-panel">
       <div className="section-title">
         <Shield size={22} />
-        <h2>Account controls</h2>
+        <h2>My Profile</h2>
+      </div>
+
+      <div className="profile-summary">
+        <div>
+          <span>Full name</span>
+          <strong>{user.fullName || user.name}</strong>
+        </div>
+        <div>
+          <span>Email</span>
+          <strong>{user.email}</strong>
+        </div>
+        <div>
+          <span>Role</span>
+          <strong>{user.role}</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>{user.status || 'active'}</strong>
+        </div>
+        <div>
+          <span>Credit</span>
+          <strong>{user.creditWallet?.availableCredit ?? 0}</strong>
+        </div>
+        <div>
+          <span>Created</span>
+          <strong>{user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A'}</strong>
+        </div>
       </div>
 
       <form className="account-form" onSubmit={handleProfile}>
@@ -1764,6 +1795,9 @@ function Dashboard({ user, onLogout }) {
 
   useEffect(() => {
     loadProjects();
+    getCurrentUser()
+      .then((result) => updateCurrentUser(result.user))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {

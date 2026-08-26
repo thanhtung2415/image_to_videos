@@ -40,6 +40,8 @@ Tai khoan mau:
 | Admin | admin@example.com | Admin123! |
 | User | user@example.com | User123! |
 
+`user@example.com` bat dau voi 0 credit de dung voi luong demo cua de thi. Admin demo co credit rieng de kiem tra thao tac quan tri.
+
 ## Backup
 
 Chay lenh sau de export cac collection ra JSON:

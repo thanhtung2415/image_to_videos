@@ -89,6 +89,10 @@ export function getCreditWallet() {
   return apiFetch('/credits/wallet');
 }
 
+export function getCurrentUser() {
+  return apiFetch('/users/me');
+}
+
 export function getNotificationPreferences() {
   return apiFetch('/notifications/preferences/me');
 }

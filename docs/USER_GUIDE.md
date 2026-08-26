@@ -9,6 +9,8 @@ Chay `npm run seed` de tao tai khoan mau.
 | Admin | admin@example.com | Admin123! |
 | User | user@example.com | User123! |
 
+User demo bat dau voi 0 credit. Hay mua goi mock hoac nhap promotion code `WELCOME10` truoc khi tao video.
+
 ## User flow
 
 1. Dang ky hoac dang nhap.

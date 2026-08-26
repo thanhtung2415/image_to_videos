@@ -34,6 +34,7 @@ export async function createCheckout({ userId, planCode, idempotencyKey }) {
   const payment = await Payment.create({
     user: userId,
     planCode: plan.code,
+    package: plan._id,
     provider: env.payment.provider,
     providerPaymentId: crypto.randomUUID(),
     status: env.payment.provider === 'mock' ? 'paid' : 'pending',
@@ -117,6 +118,7 @@ export async function createCheckoutWithCoupon({ userId, planCode, couponCode, i
   const payment = await Payment.create({
     user: userId,
     planCode: plan.code,
+    package: plan._id,
     provider: env.payment.provider,
     providerPaymentId: crypto.randomUUID(),
     status: env.payment.provider === 'mock' ? 'paid' : 'pending',

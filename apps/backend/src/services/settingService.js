@@ -1,4 +1,4 @@
-import { Setting } from '../models/Setting.js';
+import { SystemSetting } from '../models/SystemSetting.js';
 import { estimateProviderCost } from './providers/providerRouter.js';
 
 const VIDEO_COSTS_KEY = 'video_costs';
@@ -32,7 +32,7 @@ const defaultSystemSettings = {
 };
 
 export async function getVideoCostSettings() {
-  const setting = await Setting.findOneAndUpdate(
+  const setting = await SystemSetting.findOneAndUpdate(
     { key: VIDEO_COSTS_KEY },
     { $setOnInsert: { key: VIDEO_COSTS_KEY, value: defaultVideoCosts } },
     { new: true, upsert: true }
@@ -59,7 +59,7 @@ export async function updateVideoCostSettings(value) {
     }
   };
 
-  await Setting.findOneAndUpdate(
+  await SystemSetting.findOneAndUpdate(
     { key: VIDEO_COSTS_KEY },
     { key: VIDEO_COSTS_KEY, value: next },
     { new: true, upsert: true, runValidators: true }
@@ -70,7 +70,7 @@ export async function updateVideoCostSettings(value) {
 
 export async function getSystemSettings() {
   const [setting, videoCosts] = await Promise.all([
-    Setting.findOneAndUpdate(
+    SystemSetting.findOneAndUpdate(
       { key: SYSTEM_SETTINGS_KEY },
       { $setOnInsert: { key: SYSTEM_SETTINGS_KEY, value: defaultSystemSettings } },
       { new: true, upsert: true }
@@ -122,7 +122,7 @@ export async function updateSystemSettings(value) {
   };
 
   await Promise.all([
-    Setting.findOneAndUpdate(
+    SystemSetting.findOneAndUpdate(
       { key: SYSTEM_SETTINGS_KEY },
       { key: SYSTEM_SETTINGS_KEY, value: next },
       { new: true, upsert: true, runValidators: true }

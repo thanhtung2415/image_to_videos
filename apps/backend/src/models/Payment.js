@@ -12,6 +12,11 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    package: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'PricingPlan',
+      index: true
+    },
     provider: {
       type: String,
       enum: ['mock', 'payos', 'stripe'],

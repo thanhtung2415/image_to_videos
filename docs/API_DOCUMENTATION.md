@@ -47,6 +47,8 @@ Base URL local: `http://localhost:4000/api`
 
 Common errors:
 
+Payment records store the selected credit package reference, plan code, amount, credits, currency, provider, status and timestamps.
+
 | Status | Meaning |
 | --- | --- |
 | 400 | Invalid input or business rule failed. |

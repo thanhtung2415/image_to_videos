@@ -864,6 +864,7 @@ adminRoutes.get('/payments', async (req, res, next) => {
 
     const payments = await Payment.find(filter)
       .populate('user', 'name email')
+      .populate('package', 'code name credits price currency active')
       .sort({ createdAt: -1 })
       .limit(100);
 

@@ -13,7 +13,7 @@ The project uses MongoDB with Mongoose models.
 | Payment | payments | Mock payment records for buying credit packages. |
 | Promotion | promotions | Campaign name/code, period, bonus credit, registration limit, conditions and status. |
 | PromotionRegistration | promotion_registrations | Which user claimed which promotion and how much credit was granted. |
-| Settings | settings | Video cost, upload limit and provider settings. |
+| SystemSetting | settings | Video cost, upload limit and provider settings. |
 | Notification | notifications | In-app notifications for user events. |
 | AuditLog | audit_logs | Important user/admin actions. |
 | ContentReport | content_reports | User reports for generated videos. |

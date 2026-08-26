@@ -46,9 +46,12 @@ function createTokenPair() {
 function publicUser(user) {
   return {
     id: user._id,
+    fullName: user.name,
     name: user.name,
     email: user.email,
     role: user.role,
+    status: user.status,
+    createdAt: user.createdAt,
     creditWallet: user.creditWallet
   };
 }

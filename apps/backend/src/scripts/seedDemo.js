@@ -6,7 +6,7 @@ import { User } from '../models/User.js';
 import { seedDefaultPricingPlans } from '../services/pricingService.js';
 import { getVideoCostSettings } from '../services/settingService.js';
 
-async function upsertUser({ name, email, password, role }) {
+async function upsertUser({ name, email, password, role, initialCredit = 0 }) {
   const passwordHash = await bcrypt.hash(password, 10);
   return User.findOneAndUpdate(
     { email },
@@ -17,9 +17,9 @@ async function upsertUser({ name, email, password, role }) {
       role,
       status: 'active',
       creditWallet: {
-        availableCredit: 100,
+        availableCredit: initialCredit,
         reservedCredit: 0,
-        lifetimePurchased: 100,
+        lifetimePurchased: initialCredit,
         lifetimeUsed: 0
       }
     },
@@ -37,13 +37,15 @@ async function seedDemo() {
       name: 'Admin Demo',
       email: 'admin@example.com',
       password: 'Admin123!',
-      role: 'admin'
+      role: 'admin',
+      initialCredit: 100
     }),
     upsertUser({
       name: 'User Demo',
       email: 'user@example.com',
       password: 'User123!',
-      role: 'user'
+      role: 'user',
+      initialCredit: 0
     })
   ]);
 
