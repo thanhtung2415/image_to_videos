@@ -230,6 +230,36 @@ Body:
 
 Lay danh sach video de admin kiem tra ket qua, failed cases va trang thai xu ly. Co the bo query `status` de xem tat ca.
 
+### GET `/admin/pricing-plans`
+
+Lay toan bo goi credit, bao gom goi inactive.
+
+### POST `/admin/pricing-plans`
+
+Tao goi credit moi.
+
+Body:
+
+```json
+{
+  "code": "starter",
+  "name": "Starter",
+  "credits": 50,
+  "price": 25000,
+  "currency": "VND",
+  "active": true,
+  "sortOrder": 5
+}
+```
+
+### PATCH `/admin/pricing-plans/:id`
+
+Cap nhat goi credit, thuong dung de bat/tat goi hoac doi gia.
+
+### GET `/admin/payments?status=paid`
+
+Lay danh sach payment, co the loc theo status.
+
 ### GET `/admin/coupons`
 
 Lay danh sach coupon.

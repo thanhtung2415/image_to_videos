@@ -135,7 +135,7 @@ Replicate `minimax/video-01` duoc uu tien cho demo AI neu token kha dung. Fal va
 - Security headers, rate limit, content moderation co ban, audit log.
 - User profile update, password change, account export va soft delete.
 - Admin dashboard quan ly user, lock/unlock, role, manual credit adjustment.
-- Admin tao promotion, coupon, cau hinh video cost, xem report tong hop 30 ngay.
+- Admin tao/sua goi credit, xem payment, tao promotion, coupon, cau hinh video cost, xem report tong hop 30 ngay.
 - Admin API overview va audit log.
 - Provider health va cost tracking.
 - Request logging voi request id.
