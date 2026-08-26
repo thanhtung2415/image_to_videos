@@ -36,6 +36,7 @@ import {
   getAdminReportSummary,
   getAdminVideoCosts,
   getActivePromotions,
+  getCreditTransactions,
   getAccountExportUrl,
   getProjectEventsUrl,
   getProject,
@@ -329,6 +330,7 @@ function ProjectForm({ onCreated }) {
 function PricingPanel({ onPurchased, onWalletChanged }) {
   const [plans, setPlans] = useState([]);
   const [promotions, setPromotions] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [loadingPlan, setLoadingPlan] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [promotionCode, setPromotionCode] = useState('');
@@ -341,6 +343,9 @@ function PricingPanel({ onPurchased, onWalletChanged }) {
     getActivePromotions()
       .then((result) => setPromotions(result.promotions || []))
       .catch(() => setPromotions([]));
+    getCreditTransactions()
+      .then((result) => setTransactions(result.transactions || []))
+      .catch(() => setTransactions([]));
   }, []);
 
   async function handleBuy(planCode) {
@@ -354,6 +359,8 @@ function PricingPanel({ onPurchased, onWalletChanged }) {
         idempotencyKey: `${planCode}-${crypto.randomUUID()}`
       });
       onPurchased(result.payment);
+      const transactionResult = await getCreditTransactions();
+      setTransactions(transactionResult.transactions || []);
       setMessage('Credit da duoc cong vao vi.');
     } catch (err) {
       setMessage(err.message);
@@ -369,6 +376,8 @@ function PricingPanel({ onPurchased, onWalletChanged }) {
     try {
       const result = await registerPromotion({ code: promotionCode });
       onWalletChanged(result.wallet);
+      const transactionResult = await getCreditTransactions();
+      setTransactions(transactionResult.transactions || []);
       setPromotionCode('');
       setMessage(`Promotion accepted: +${result.promotion.creditBonus} credits.`);
     } catch (err) {
@@ -422,6 +431,21 @@ function PricingPanel({ onPurchased, onWalletChanged }) {
           ))}
         </div>
       )}
+
+      <div className="section-title compact">
+        <RefreshCcw size={20} />
+        <h3>Credit history</h3>
+      </div>
+
+      <div className="compact-list">
+        {transactions.length === 0 && <div className="empty small">No transactions.</div>}
+        {transactions.slice(0, 5).map((transaction) => (
+          <article key={transaction._id}>
+            <strong>{transaction.type}: {transaction.amount}</strong>
+            <span>{transaction.note || new Date(transaction.createdAt).toLocaleString('vi-VN')}</span>
+          </article>
+        ))}
+      </div>
 
       {message && <div className="muted-message">{message}</div>}
     </section>

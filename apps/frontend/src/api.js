@@ -81,6 +81,10 @@ export function getNotifications() {
   return apiFetch('/notifications');
 }
 
+export function getCreditTransactions() {
+  return apiFetch('/credits/transactions');
+}
+
 export function getNotificationPreferences() {
   return apiFetch('/notifications/preferences/me');
 }
