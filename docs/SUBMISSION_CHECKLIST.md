@@ -30,6 +30,7 @@ The zip is created in `submissions` and contains only tracked source files from 
 - Database document: `docs/DATABASE.md`
 - Deployment guide: `docs/DEPLOYMENT.md`
 - User guide: `docs/USER_GUIDE.md`
+- Acceptance tests: `docs/ACCEPTANCE_TESTS.md`
 - Internal SRS is not stored in this GitHub repository
 
 ## Demo accounts
@@ -68,6 +69,7 @@ The zip is created in `submissions` and contains only tracked source files from 
 ## Final check
 
 ```bash
+npm run verify:submission
 npm run check
 ```
 

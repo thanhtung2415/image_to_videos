@@ -54,6 +54,7 @@ npm run dev:frontend
 Kiem tra nhanh truoc khi commit/deploy:
 
 ```bash
+npm run verify:submission
 npm run check
 ```
 
@@ -158,6 +159,8 @@ Huong dan chi tiet nam trong `docs/DEPLOYMENT.md`.
 Huong dan cau hinh AI provider fal.ai nam trong `docs/FAL_AI.md`. Replicate dung bien `REPLICATE_API_TOKEN`.
 
 Mo ta API nam trong `docs/API.md`. Mo ta database nam trong `docs/DATABASE.md`. Kien truc tong quan nam trong `docs/ARCHITECTURE.md`. Huong dan demo nam trong `docs/USER_GUIDE.md`. Checklist nop bai nam trong `docs/SUBMISSION_CHECKLIST.md`.
+
+Acceptance test checklist nam trong `docs/ACCEPTANCE_TESTS.md`.
 
 ## Con can lam de production that
 
