@@ -226,6 +226,10 @@ Body:
 }
 ```
 
+### GET `/admin/videos?status=failed`
+
+Lay danh sach video de admin kiem tra ket qua, failed cases va trang thai xu ly. Co the bo query `status` de xem tat ca.
+
 ### GET `/admin/coupons`
 
 Lay danh sach coupon.
