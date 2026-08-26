@@ -16,6 +16,7 @@ import { requireAdmin } from '../middleware/requireAdmin.js';
 import { getCostSummary } from '../services/costService.js';
 import { adjustCredits } from '../services/creditService.js';
 import { listProviderHealth } from '../services/providerHealthService.js';
+import { seedDefaultPricingPlans } from '../services/pricingService.js';
 import { getVideoCostSettings, updateVideoCostSettings } from '../services/settingService.js';
 import { writeAuditLog } from '../services/auditService.js';
 
@@ -408,6 +409,7 @@ adminRoutes.get('/videos', async (req, res, next) => {
 
 adminRoutes.get('/pricing-plans', async (req, res, next) => {
   try {
+    await seedDefaultPricingPlans();
     const plans = await PricingPlan.find().sort({ sortOrder: 1, createdAt: -1 });
     res.json({ plans });
   } catch (error) {
