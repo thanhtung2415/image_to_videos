@@ -6,6 +6,7 @@ The project uses MongoDB with Mongoose models.
 | --- | --- | --- |
 | User | users | Account, role, status, profile and embedded credit wallet. |
 | VideoProject | video_projects | Uploaded image, prompt, generation mode, provider/model, status and output video. |
+| Video | video_projects.outputVideo | MP4 result metadata stored inside each video project. |
 | GenerationJob | generation_jobs | Background job state, queue id, progress, provider request id and error tracking. |
 | CreditWallet | users.creditWallet | Available/reserved credit totals and lifetime purchased/used counters. |
 | CreditTransaction | credit_transactions | Purchase, reserve, capture, release, refund, manual adjustment and promotion bonus history. |

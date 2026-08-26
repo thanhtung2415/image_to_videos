@@ -36,13 +36,13 @@ const defaultPlans = [
 ];
 
 export async function seedDefaultPricingPlans() {
-  const count = await PricingPlan.countDocuments();
-
-  if (count > 0) {
-    return;
-  }
-
-  await PricingPlan.insertMany(defaultPlans);
+  await Promise.all(
+    defaultPlans.map((plan) => PricingPlan.findOneAndUpdate(
+      { code: plan.code },
+      { $setOnInsert: { ...plan, active: true } },
+      { upsert: true, new: true }
+    ))
+  );
 }
 
 export async function listActivePlans() {
@@ -54,4 +54,3 @@ export async function getPlanForCheckout(planCode) {
   await seedDefaultPricingPlans();
   return PricingPlan.findOne({ code: planCode, active: true });
 }
-

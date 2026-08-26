@@ -96,8 +96,10 @@ export async function registerPromotionForUser({ userId, code, promotionId }) {
     };
   }
 
+  let registration;
+
   try {
-    const registration = await PromotionRegistration.create({
+    registration = await PromotionRegistration.create({
       user: userId,
       userId,
       promotion: updatedPromotion._id,
@@ -117,6 +119,19 @@ export async function registerPromotionForUser({ userId, code, promotionId }) {
       idempotencyKey: `promotion:${registration._id}`
     });
 
+    if (!user) {
+      await PromotionRegistration.deleteOne({ _id: registration._id });
+      await Promotion.findByIdAndUpdate(updatedPromotion._id, {
+        $inc: { registeredCount: -1, currentRegistrations: -1 }
+      });
+
+      return {
+        ok: false,
+        status: 400,
+        message: 'Khong the cong credit promotion'
+      };
+    }
+
     return {
       ok: true,
       promotion: updatedPromotion,
@@ -124,6 +139,10 @@ export async function registerPromotionForUser({ userId, code, promotionId }) {
       user
     };
   } catch (error) {
+    if (registration?._id) {
+      await PromotionRegistration.deleteOne({ _id: registration._id });
+    }
+
     await Promotion.findByIdAndUpdate(updatedPromotion._id, {
       $inc: { registeredCount: -1, currentRegistrations: -1 }
     });
