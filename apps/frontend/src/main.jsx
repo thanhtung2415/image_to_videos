@@ -58,6 +58,7 @@ import {
   refundAdminPayment,
   saveSession,
   updateAdminContentReport,
+  updateAdminPromotion,
   updateAdminUser,
   updateAdminPricingPlan,
   updateAdminVideoCosts,
@@ -678,6 +679,21 @@ function AdminPanel() {
       });
       setMessage('Promotion created.');
       await loadAdminData();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleTogglePromotion(promotion) {
+    setMessage('');
+    setError('');
+
+    try {
+      const result = await updateAdminPromotion(promotion._id, {
+        status: promotion.status === 'active' ? 'inactive' : 'active'
+      });
+      setPromotions((items) => items.map((item) => (item._id === result.promotion._id ? result.promotion : item)));
+      setMessage('Promotion updated.');
     } catch (err) {
       setError(err.message);
     }
@@ -1305,6 +1321,9 @@ function AdminPanel() {
           <article key={promotion._id}>
             <strong>{promotion.code}</strong>
             <span>{promotion.creditBonus} credits - {promotion.status} - used {promotion.registeredCount}/{promotion.maxRegistrations || '∞'}</span>
+            <button className="ghost-button small-action" type="button" onClick={() => handleTogglePromotion(promotion)}>
+              {promotion.status === 'active' ? 'Disable' : 'Enable'}
+            </button>
           </article>
         ))}
       </div>

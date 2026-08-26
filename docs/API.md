@@ -301,6 +301,10 @@ Body:
 }
 ```
 
+### PATCH `/admin/promotions/:id`
+
+Cap nhat promotion, vi du bat/tat status hoac doi thoi gian hieu luc.
+
 ## Account
 
 ### PATCH `/account/profile`

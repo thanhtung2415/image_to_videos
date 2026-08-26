@@ -172,6 +172,13 @@ export function createAdminPromotion(payload) {
   });
 }
 
+export function updateAdminPromotion(id, payload) {
+  return apiFetch(`/admin/promotions/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload)
+  });
+}
+
 export function getAdminContentReports() {
   return apiFetch('/admin/content-reports');
 }
