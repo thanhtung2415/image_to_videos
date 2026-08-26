@@ -21,8 +21,8 @@ Body:
 ```json
 {
   "name": "Nguyen Van A",
-  "email": "demo@example.com",
-  "password": "123456",
+  "email": "user@example.com",
+  "password": "User123!",
   "promotionCode": "WELCOME10"
 }
 ```
@@ -33,8 +33,8 @@ Body:
 
 ```json
 {
-  "email": "demo@example.com",
-  "password": "123456"
+  "email": "user@example.com",
+  "password": "User123!"
 }
 ```
 

@@ -28,6 +28,14 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: REPLICATE_API_TOKEN
+        sync: false
+      - key: REPLICATE_MINIMAX_VIDEO_VERSION
+        sync: false
+      - key: FAL_API_KEY
+        sync: false
+      - key: PAYMENT_PROVIDER
+        value: mock
 
   - type: worker
     name: image-to-videos-worker
@@ -54,4 +62,9 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-
+      - key: REPLICATE_API_TOKEN
+        sync: false
+      - key: REPLICATE_MINIMAX_VIDEO_VERSION
+        sync: false
+      - key: FAL_API_KEY
+        sync: false

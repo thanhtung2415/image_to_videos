@@ -70,9 +70,9 @@ import {
 import './styles.css';
 
 const emptyAuth = {
-  name: 'Nguyen Van A',
-  email: 'demo@example.com',
-  password: '123456',
+  name: 'User Demo',
+  email: 'user@example.com',
+  password: 'User123!',
   promotionCode: ''
 };
 

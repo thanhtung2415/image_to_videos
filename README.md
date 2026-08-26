@@ -90,8 +90,8 @@ Tai khoan:
 
 | Role | Email | Password |
 | --- | --- | --- |
-| Admin | admin@example.com | 123456 |
-| User | user@example.com | 123456 |
+| Admin | admin@example.com | Admin123! |
+| User | user@example.com | User123! |
 
 Coupon demo: `SALE20`.
 
