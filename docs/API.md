@@ -75,6 +75,9 @@ Form data:
 | prompt | Mo ta chuyen dong |
 | duration | 3, 5, 8 hoac 10 |
 | resolution | 1280x720, 720x1280 hoac 1024x1024 |
+| generationMode | `ffmpeg` hoac `ai` |
+| provider | `replicate`, `fal`, `runway`, `luma` khi dung AI |
+| model | Model id cua provider khi dung AI |
 | image | File JPG, PNG hoac WEBP |
 
 ### GET `/projects/:id`
@@ -98,6 +101,24 @@ Provider `fal` se enabled khi backend co `FAL_API_KEY` hoac `FAL_KEY`.
 ### GET `/pricing/plans`
 
 Lay danh sach goi credit do backend tinh va quan ly.
+
+## Promotions
+
+### GET `/promotions/active`
+
+Lay danh sach promotion dang hieu luc.
+
+### POST `/promotions/register`
+
+Dang ky promotion va nhan credit bonus neu hop le.
+
+Body:
+
+```json
+{
+  "code": "WELCOME10"
+}
+```
 
 ## Payments
 
@@ -154,9 +175,56 @@ Lay audit logs gan nhat.
 
 Lay trang thai health cua cac AI provider.
 
+### GET `/admin/reports/summary?days=30`
+
+Bao cao tong hop theo khoang thoi gian: user moi, video thanh cong/that bai, credit phat hanh/su dung, doanh thu va promotion.
+
 ### GET `/admin/cost-summary`
 
 Lay tong hop cost/credit theo provider.
+
+### GET `/admin/video-costs`
+
+Lay cau hinh credit cost cho FFmpeg va AI.
+
+### PATCH `/admin/video-costs`
+
+Cap nhat cau hinh credit cost.
+
+Body:
+
+```json
+{
+  "ffmpegBaseCredits": 5,
+  "aiDefaultBaseCredits": 20,
+  "extraSecondCredits": 5
+}
+```
+
+### GET `/admin/users?search=demo`
+
+Tim kiem va liet ke user.
+
+### GET `/admin/users/:id`
+
+Lay chi tiet user, transaction gan nhat va project gan nhat.
+
+### PATCH `/admin/users/:id`
+
+Cap nhat name, role hoac status cua user.
+
+### POST `/admin/users/:id/credits`
+
+Cong hoac tru credit thu cong. `amount` co the am de tru credit.
+
+Body:
+
+```json
+{
+  "amount": 10,
+  "reason": "Admin adjustment"
+}
+```
 
 ### GET `/admin/coupons`
 
@@ -177,7 +245,37 @@ Body:
 }
 ```
 
+### GET `/admin/promotions`
+
+Lay danh sach promotion va thong ke dang ky.
+
+### POST `/admin/promotions`
+
+Tao promotion moi.
+
+Body:
+
+```json
+{
+  "name": "New user bonus",
+  "code": "WELCOME10",
+  "creditBonus": 10,
+  "maxRegistrations": 100,
+  "startsAt": "2026-08-26T00:00:00.000Z",
+  "endsAt": "2026-09-10T00:00:00.000Z",
+  "conditions": "One registration per user"
+}
+```
+
 ## Account
+
+### PATCH `/account/profile`
+
+Cap nhat ho ten user dang dang nhap.
+
+### PATCH `/account/password`
+
+Doi mat khau user dang dang nhap.
 
 ### GET `/account/export`
 

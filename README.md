@@ -1,6 +1,6 @@
 # Image To Videos
 
-Website chuyen anh thanh video ngan theo SRS v2.0. Ban hien tai la Commercial MVP: co dang ky, dang nhap, credit wallet, pricing/payment mock, notification, upload anh, tao video MP4 bang FFmpeg/AI va hien thi video ket qua tren trinh duyet.
+Website chuyen anh thanh video ngan cho do an lap trinh ung dung web. Ban hien tai la Commercial MVP: co dang ky, dang nhap, credit wallet, pricing/payment mock, promotion, notification, upload anh, tao video MP4 bang FFmpeg/AI va hien thi video ket qua tren trinh duyet.
 
 ## Kien truc
 
@@ -95,6 +95,8 @@ Tai khoan:
 
 Coupon demo: `SALE20`.
 
+Promotion demo: `WELCOME10`.
+
 ## Cau hinh AI
 
 FFmpeg la luong demo on dinh. Neu muon tao chuyen dong bang AI, cau hinh them:
@@ -118,7 +120,7 @@ Replicate `minimax/video-01` duoc uu tien cho demo AI neu token kha dung. Fal va
 8. Neu job loi, backend release credits ve vi.
 9. Frontend tu cap nhat trang thai job va hien video khi hoan tat.
 
-## Da co theo SRS v2.0
+## Chuc nang da co
 
 - AI Provider Router/Adapter skeleton cho Replicate, fal.ai, Runway, Luma.
 - Replicate Minimax Video-01 adapter that bang `REPLICATE_API_TOKEN`.
@@ -131,11 +133,13 @@ Replicate `minimax/video-01` duoc uu tien cho demo AI neu token kha dung. Fal va
 - SSE endpoint cho realtime status, frontend van co polling fallback.
 - In-app notification va email mock/SMTP.
 - Security headers, rate limit, content moderation co ban, audit log.
+- User profile update, password change, account export va soft delete.
+- Admin dashboard quan ly user, lock/unlock, role, manual credit adjustment.
+- Admin tao promotion, coupon, cau hinh video cost, xem report tong hop 30 ngay.
 - Admin API overview va audit log.
 - Provider health va cost tracking.
 - Request logging voi request id.
 - Coupon va refund mock.
-- Account data export va soft delete.
 
 ## Deploy goi y
 
@@ -152,11 +156,12 @@ Huong dan chi tiet nam trong `docs/DEPLOYMENT.md`.
 
 Huong dan cau hinh AI provider fal.ai nam trong `docs/FAL_AI.md`. Replicate dung bien `REPLICATE_API_TOKEN`.
 
+Mo ta API nam trong `docs/API.md`. Mo ta database nam trong `docs/DATABASE.md`.
+
 ## Con can lam de production that
 
 - Noi them API that cho Runway hoac Luma.
 - Bo sung adapter that cho Runway hoac Luma.
 - Noi payment that voi payOS hoac Stripe va verify webhook signature.
-- Tao admin UI day du.
 - Bo sung email provider that nhu Resend/Brevo.
 - Deploy frontend/backend online va cau hinh MongoDB Atlas, Cloudinary, Redis.
