@@ -34,7 +34,6 @@ const allowedOrigins = new Set(devOrigins.filter(Boolean));
 
 app.use(requestLogger);
 app.use(secureHeaders);
-app.use(apiRateLimit);
 app.use(cors({
   origin(origin, callback) {
     if (!origin || allowedOrigins.has(origin)) {
@@ -46,6 +45,7 @@ app.use(cors({
   },
   credentials: true
 }));
+app.use(apiRateLimit);
 app.use(express.json({ limit: '1mb' }));
 app.use('/media', express.static(path.resolve(__dirname, '../uploads')));
 
