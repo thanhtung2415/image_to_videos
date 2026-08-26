@@ -34,6 +34,7 @@ import {
   getAdminPromotions,
   getAdminProviderHealth,
   getAdminReportSummary,
+  getAdminVideos,
   getAdminVideoCosts,
   getActivePromotions,
   getCreditTransactions,
@@ -540,6 +541,8 @@ function AdminPanel() {
   const [coupons, setCoupons] = useState([]);
   const [promotions, setPromotions] = useState([]);
   const [reports, setReports] = useState([]);
+  const [adminVideos, setAdminVideos] = useState([]);
+  const [videoStatusFilter, setVideoStatusFilter] = useState('');
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userSearch, setUserSearch] = useState('');
@@ -572,7 +575,8 @@ function AdminPanel() {
         usersResult,
         promotionResult,
         costSettingsResult,
-        reportSummaryResult
+        reportSummaryResult,
+        adminVideosResult
       ] = await Promise.all([
         getAdminOverview(),
         getAdminProviderHealth(),
@@ -582,7 +586,8 @@ function AdminPanel() {
         getAdminUsers(userSearch),
         getAdminPromotions(),
         getAdminVideoCosts(),
-        getAdminReportSummary(30)
+        getAdminReportSummary(30),
+        getAdminVideos(videoStatusFilter)
       ]);
       setOverview(overviewResult.overview);
       setHealth(healthResult.health || []);
@@ -591,6 +596,7 @@ function AdminPanel() {
       setReports(reportResult.reports || []);
       setUsers(usersResult.users || []);
       setPromotions(promotionResult.promotions || []);
+      setAdminVideos(adminVideosResult.videos || []);
       setReportSummary(reportSummaryResult.report);
       setCostSettings(costSettingsResult.costs);
       setCostForm({
@@ -733,6 +739,19 @@ function AdminPanel() {
       });
       setCostSettings(result.costs);
       setMessage('Video costs updated.');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleVideoFilter(event) {
+    const nextStatus = event.target.value;
+    setVideoStatusFilter(nextStatus);
+    setError('');
+
+    try {
+      const result = await getAdminVideos(nextStatus);
+      setAdminVideos(result.videos || []);
     } catch (err) {
       setError(err.message);
     }
@@ -902,6 +921,34 @@ function AdminPanel() {
               <span>{item.enabled ? 'enabled' : 'disabled'}</span>
             </div>
             <StatusBadge status={item.status} />
+          </article>
+        ))}
+      </div>
+
+      <div className="section-title compact">
+        <Film size={20} />
+        <h3>Video review</h3>
+      </div>
+
+      <label>
+        Status
+        <select value={videoStatusFilter} onChange={handleVideoFilter}>
+          <option value="">all</option>
+          <option value="completed">completed</option>
+          <option value="failed">failed</option>
+          <option value="processing">processing</option>
+          <option value="queued">queued</option>
+          <option value="cancelled">cancelled</option>
+        </select>
+      </label>
+
+      <div className="compact-list">
+        {adminVideos.length === 0 && <div className="empty small">No videos.</div>}
+        {adminVideos.slice(0, 5).map((video) => (
+          <article key={video._id}>
+            <strong>{video.title}</strong>
+            <span>{video.user?.email || 'unknown user'} - {video.status} - {video.costCredits} credits</span>
+            {video.errorMessage && <span>{video.errorMessage}</span>}
           </article>
         ))}
       </div>

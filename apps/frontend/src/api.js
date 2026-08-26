@@ -172,6 +172,11 @@ export function getAdminContentReports() {
   return apiFetch('/admin/content-reports');
 }
 
+export function getAdminVideos(status = '') {
+  const query = status ? `?status=${encodeURIComponent(status)}` : '';
+  return apiFetch(`/admin/videos${query}`);
+}
+
 export function createCheckout(payload) {
   return apiFetch('/payments/checkout', {
     method: 'POST',

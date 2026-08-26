@@ -345,6 +345,21 @@ adminRoutes.get('/content-reports', async (req, res, next) => {
   }
 });
 
+adminRoutes.get('/videos', async (req, res, next) => {
+  try {
+    const status = String(req.query.status || '').trim();
+    const filter = status ? { status } : {};
+    const videos = await VideoProject.find(filter)
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    res.json({ videos });
+  } catch (error) {
+    next(error);
+  }
+});
+
 adminRoutes.get('/promotions', async (req, res, next) => {
   try {
     const promotions = await Promotion.find().sort({ createdAt: -1 }).limit(100);
