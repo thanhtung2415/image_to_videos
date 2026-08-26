@@ -137,7 +137,7 @@ Replicate `minimax/video-01` duoc uu tien cho demo AI neu token kha dung. Fal va
 - Security headers, rate limit, content moderation co ban, audit log.
 - User profile update, password change, account export va soft delete.
 - Admin dashboard quan ly user, lock/unlock, role, manual credit adjustment.
-- Admin tao/sua goi credit, xem payment, tao promotion, xem promotion registrations, coupon, cau hinh video cost, upload/provider settings, xem video detail va report tong hop 30 ngay.
+- Admin tao/sua goi credit, xem payment, tao promotion, xem promotion registrations, xem toan bo credit transaction history, coupon, cau hinh video cost, upload/provider settings, xem video detail va report tong hop 30 ngay.
 - Admin API overview va audit log.
 - Provider health va cost tracking.
 - Request logging voi request id.
@@ -158,7 +158,7 @@ Huong dan chi tiet nam trong `docs/DEPLOYMENT.md`.
 
 Huong dan cau hinh AI provider fal.ai nam trong `docs/FAL_AI.md`. Replicate dung bien `REPLICATE_API_TOKEN`.
 
-Mo ta API nam trong `docs/API.md`. Mo ta database nam trong `docs/DATABASE.md`. Kien truc tong quan nam trong `docs/ARCHITECTURE.md`. Huong dan demo nam trong `docs/USER_GUIDE.md`. Checklist nop bai nam trong `docs/SUBMISSION_CHECKLIST.md`.
+Mo ta API nam trong `docs/API.md`. Mo ta database nam trong `docs/DATABASE.md`. Kien truc tong quan nam trong `docs/ARCHITECTURE.md`. Huong dan demo nam trong `docs/USER_GUIDE.md`. Bao cao tom tat nam trong `docs/PROJECT_REPORT.md`. Bang doi chieu de thi nam trong `docs/REQUIREMENTS_TRACEABILITY.md`. Checklist nop bai nam trong `docs/SUBMISSION_CHECKLIST.md`.
 
 Acceptance test checklist nam trong `docs/ACCEPTANCE_TESTS.md`.
 

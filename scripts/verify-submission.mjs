@@ -45,6 +45,8 @@ const requiredFiles = [
   'docs/INSTALLATION.md',
   'docs/USER_GUIDE.md',
   'docs/DEMO_ACCOUNTS.md',
+  'docs/PROJECT_REPORT.md',
+  'docs/REQUIREMENTS_TRACEABILITY.md',
   'docs/ACCEPTANCE_TESTS.md'
 ];
 
