@@ -8,13 +8,15 @@ import { requireAuth } from '../middleware/auth.js';
 import { signAccessToken } from '../services/tokenService.js';
 import { writeAuditLog } from '../services/auditService.js';
 import { sendEmail } from '../services/emailService.js';
+import { registerPromotionForUser, validatePromotionCode } from '../services/promotionService.js';
 
 export const authRoutes = express.Router();
 
 const registerSchema = z.object({
   name: z.string().min(2).max(80),
   email: z.string().email(),
-  password: z.string().min(6).max(80)
+  password: z.string().min(6).max(80),
+  promotionCode: z.string().max(40).optional().default('')
 });
 
 const loginSchema = z.object({
@@ -61,6 +63,14 @@ authRoutes.post('/register', async (req, res, next) => {
       return res.status(409).json({ message: 'Email da duoc su dung' });
     }
 
+    if (data.promotionCode) {
+      const promotionValidation = await validatePromotionCode(data.promotionCode);
+
+      if (!promotionValidation.ok) {
+        return res.status(promotionValidation.status).json({ message: promotionValidation.message });
+      }
+    }
+
     const passwordHash = await bcrypt.hash(data.password, 10);
     const emailVerification = createTokenPair();
     const user = await User.create({
@@ -85,9 +95,32 @@ authRoutes.post('/register', async (req, res, next) => {
       req
     });
 
+    let registeredUser = user;
+
+    if (data.promotionCode) {
+      const promotionResult = await registerPromotionForUser({
+        userId: user._id,
+        code: data.promotionCode
+      });
+
+      if (!promotionResult.ok) {
+        return res.status(promotionResult.status).json({ message: promotionResult.message });
+      }
+
+      registeredUser = promotionResult.user;
+
+      await writeAuditLog({
+        actor: user._id,
+        action: 'promotion.register_on_signup',
+        resourceType: 'Promotion',
+        resourceId: promotionResult.promotion._id.toString(),
+        req
+      });
+    }
+
     res.status(201).json({
-      user: publicUser(user),
-      token: signAccessToken(user)
+      user: publicUser(registeredUser),
+      token: signAccessToken(registeredUser)
     });
   } catch (error) {
     next(error);

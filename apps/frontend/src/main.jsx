@@ -68,7 +68,8 @@ import './styles.css';
 const emptyAuth = {
   name: 'Nguyen Van A',
   email: 'demo@example.com',
-  password: '123456'
+  password: '123456',
+  promotionCode: ''
 };
 
 function AuthPanel({ onSignedIn }) {
@@ -115,16 +116,27 @@ function AuthPanel({ onSignedIn }) {
 
         <form onSubmit={handleSubmit}>
           {mode === 'register' && (
-            <label>
-              Ho ten
-              <input
-                value={form.name}
-                onChange={(event) => setForm({ ...form, name: event.target.value })}
-                minLength={2}
-                maxLength={80}
-                required
-              />
-            </label>
+            <>
+              <label>
+                Ho ten
+                <input
+                  value={form.name}
+                  onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  minLength={2}
+                  maxLength={80}
+                  required
+                />
+              </label>
+              <label>
+                Promotion code
+                <input
+                  value={form.promotionCode}
+                  onChange={(event) => setForm({ ...form, promotionCode: event.target.value })}
+                  maxLength={40}
+                  placeholder="Optional"
+                />
+              </label>
+            </>
           )}
 
           <label>
