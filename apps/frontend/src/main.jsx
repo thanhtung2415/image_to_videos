@@ -26,6 +26,7 @@ import {
   createCheckout,
   createProject,
   deleteAccount,
+  getAdminAuditLogs,
   getAdminCostSummary,
   getAdminContentReports,
   getAdminCoupons,
@@ -554,6 +555,7 @@ function NotificationsPanel() {
 
 function AdminPanel() {
   const [overview, setOverview] = useState(null);
+  const [auditLogs, setAuditLogs] = useState([]);
   const [health, setHealth] = useState([]);
   const [costSummary, setCostSummary] = useState(null);
   const [reportSummary, setReportSummary] = useState(null);
@@ -602,7 +604,8 @@ function AdminPanel() {
         reportSummaryResult,
         adminVideosResult,
         pricingPlansResult,
-        paymentsResult
+        paymentsResult,
+        auditLogsResult
       ] = await Promise.all([
         getAdminOverview(),
         getAdminProviderHealth(),
@@ -615,9 +618,11 @@ function AdminPanel() {
         getAdminReportSummary(30),
         getAdminVideos(videoStatusFilter),
         getAdminPricingPlans(),
-        getAdminPayments(paymentStatusFilter)
+        getAdminPayments(paymentStatusFilter),
+        getAdminAuditLogs()
       ]);
       setOverview(overviewResult.overview);
+      setAuditLogs(auditLogsResult.logs || []);
       setHealth(healthResult.health || []);
       setCostSummary(costResult.summary);
       setCoupons(couponResult.coupons || []);
@@ -941,6 +946,21 @@ function AdminPanel() {
           </div>
         </>
       )}
+
+      <div className="section-title compact">
+        <Activity size={20} />
+        <h3>Audit logs</h3>
+      </div>
+
+      <div className="compact-list">
+        {auditLogs.length === 0 && <div className="empty small">No logs.</div>}
+        {auditLogs.slice(0, 5).map((log) => (
+          <article key={log._id}>
+            <strong>{log.action}</strong>
+            <span>{log.resourceType} - {new Date(log.createdAt).toLocaleString('vi-VN')}</span>
+          </article>
+        ))}
+      </div>
 
       <div className="section-title compact">
         <Shield size={20} />

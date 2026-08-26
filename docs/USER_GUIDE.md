@@ -33,6 +33,7 @@ Chay `npm run seed:demo` de tao tai khoan mau.
 7. Dung `Video cost settings` de doi credit cost cho FFmpeg/AI.
 8. Dung `Coupon management` va `Promotion management` de tao ma giam gia/khuyen mai.
 9. Dung `Content reports` de review, resolve hoac dismiss report.
+10. Dung `Audit logs` de xem lai cac hanh dong quan trong trong he thong.
 
 ## Suggested screenshots for report
 

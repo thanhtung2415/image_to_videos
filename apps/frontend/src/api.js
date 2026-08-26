@@ -104,6 +104,10 @@ export function getAdminOverview() {
   return apiFetch('/admin/overview');
 }
 
+export function getAdminAuditLogs() {
+  return apiFetch('/admin/audit-logs');
+}
+
 export function getAdminProviderHealth() {
   return apiFetch('/admin/provider-health');
 }
