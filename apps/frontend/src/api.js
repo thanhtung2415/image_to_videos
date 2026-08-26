@@ -156,6 +156,20 @@ export function deleteAccount() {
   });
 }
 
+export function updateProfile(payload) {
+  return apiFetch('/account/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function changePassword(payload) {
+  return apiFetch('/account/password', {
+    method: 'PATCH',
+    body: JSON.stringify(payload)
+  });
+}
+
 export function getAccountExportUrl() {
   return `${API_URL}/account/export`;
 }

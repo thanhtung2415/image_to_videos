@@ -26,6 +26,10 @@ export async function requireAuth(req, res, next) {
       return res.status(401).json({ message: 'Tai khoan khong ton tai' });
     }
 
+    if (user.status === 'locked') {
+      return res.status(403).json({ message: 'Tai khoan dang bi khoa' });
+    }
+
     req.user = user;
     next();
   } catch (error) {

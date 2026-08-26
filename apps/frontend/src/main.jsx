@@ -18,6 +18,7 @@ import {
 import {
   clearSession,
   cancelProject,
+  changePassword,
   createAdminCoupon,
   createCheckout,
   createProject,
@@ -40,6 +41,7 @@ import {
   register,
   reportProject,
   saveSession,
+  updateProfile,
   updateNotificationPreferences
 } from './api.js';
 import './styles.css';
@@ -626,9 +628,51 @@ function AdminPanel() {
   );
 }
 
-function AccountPanel({ onDeleted }) {
+function AccountPanel({ user, onUpdated, onDeleted }) {
+  const [profileName, setProfileName] = useState(user.name);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
   const [message, setMessage] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  useEffect(() => {
+    setProfileName(user.name);
+  }, [user.name]);
+
+  async function handleProfile(event) {
+    event.preventDefault();
+    setSavingProfile(true);
+    setMessage('');
+
+    try {
+      const result = await updateProfile({ name: profileName });
+      const token = localStorage.getItem('image_to_videos_token');
+      saveSession({ token, user: result.user });
+      onUpdated(result.user);
+      setMessage('Da cap nhat ho so.');
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
+  async function handlePassword(event) {
+    event.preventDefault();
+    setSavingPassword(true);
+    setMessage('');
+
+    try {
+      await changePassword(passwordForm);
+      setPasswordForm({ currentPassword: '', newPassword: '' });
+      setMessage('Da doi mat khau.');
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setSavingPassword(false);
+    }
+  }
 
   async function handleExport() {
     const token = localStorage.getItem('image_to_videos_token');
@@ -679,6 +723,52 @@ function AccountPanel({ onDeleted }) {
         <Shield size={22} />
         <h2>Account controls</h2>
       </div>
+
+      <form className="account-form" onSubmit={handleProfile}>
+        <label>
+          Ho ten
+          <input
+            value={profileName}
+            minLength={2}
+            maxLength={80}
+            onChange={(event) => setProfileName(event.target.value)}
+            required
+          />
+        </label>
+        <button className="ghost-button" disabled={savingProfile} type="submit">
+          {savingProfile ? <LoaderCircle className="spin" size={16} /> : <Shield size={16} />}
+          Update profile
+        </button>
+      </form>
+
+      <form className="account-form" onSubmit={handlePassword}>
+        <label>
+          Mat khau hien tai
+          <input
+            type="password"
+            value={passwordForm.currentPassword}
+            minLength={6}
+            maxLength={80}
+            onChange={(event) => setPasswordForm({ ...passwordForm, currentPassword: event.target.value })}
+            required
+          />
+        </label>
+        <label>
+          Mat khau moi
+          <input
+            type="password"
+            value={passwordForm.newPassword}
+            minLength={6}
+            maxLength={80}
+            onChange={(event) => setPasswordForm({ ...passwordForm, newPassword: event.target.value })}
+            required
+          />
+        </label>
+        <button className="ghost-button" disabled={savingPassword} type="submit">
+          {savingPassword ? <LoaderCircle className="spin" size={16} /> : <Shield size={16} />}
+          Change password
+        </button>
+      </form>
 
       <div className="button-stack">
         <button className="ghost-button" type="button" onClick={handleExport}>
@@ -926,7 +1016,7 @@ function Dashboard({ user, onLogout }) {
           <ProjectForm onCreated={handleCreated} />
           <PricingPanel onPurchased={handlePurchased} />
           <NotificationsPanel />
-          <AccountPanel onDeleted={onLogout} />
+          <AccountPanel user={currentUser} onUpdated={setCurrentUser} onDeleted={onLogout} />
           {currentUser.role === 'admin' && <AdminPanel />}
         </div>
 

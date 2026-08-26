@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema(
     passwordResetExpiresAt: Date,
     status: {
       type: String,
-      enum: ['active', 'deleted'],
+      enum: ['active', 'locked', 'deleted'],
       default: 'active',
       index: true
     },
@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema(
     creditWallet: {
       availableCredit: {
         type: Number,
-        default: 20
+        default: 0
       },
       reservedCredit: {
         type: Number,
@@ -53,7 +53,7 @@ const userSchema = new mongoose.Schema(
       },
       lifetimePurchased: {
         type: Number,
-        default: 20
+        default: 0
       },
       lifetimeUsed: {
         type: Number,

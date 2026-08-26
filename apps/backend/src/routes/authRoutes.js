@@ -103,6 +103,14 @@ authRoutes.post('/login', async (req, res, next) => {
       return res.status(401).json({ message: 'Email hoac mat khau khong dung' });
     }
 
+    if (user.status === 'locked') {
+      return res.status(403).json({ message: 'Tai khoan dang bi khoa' });
+    }
+
+    if (user.status !== 'active') {
+      return res.status(401).json({ message: 'Tai khoan khong ton tai' });
+    }
+
     await writeAuditLog({
       actor: user._id,
       action: 'auth.login',
