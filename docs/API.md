@@ -46,6 +46,20 @@ Header:
 Authorization: Bearer <token>
 ```
 
+## Users
+
+### GET `/users/me`
+
+Lay profile, role, status va credit wallet cua user dang dang nhap.
+
+### PATCH `/users/me`
+
+Cap nhat ho ten/avatar cua user dang dang nhap.
+
+### PATCH `/users/me/password`
+
+Doi mat khau sau khi verify mat khau hien tai.
+
 ### POST `/auth/verify-email`
 
 Xac minh email bang token duoc gui qua email mock/provider.
@@ -109,6 +123,10 @@ Lay danh sach goi credit do backend tinh va quan ly.
 
 Lay danh sach promotion dang hieu luc.
 
+### GET `/promotions`
+
+Alias lay danh sach promotion dang hieu luc.
+
 ### POST `/promotions/register`
 
 Dang ky promotion va nhan credit bonus neu hop le.
@@ -120,6 +138,14 @@ Body:
   "code": "WELCOME10"
 }
 ```
+
+### POST `/promotions/:id/register`
+
+Dang ky promotion theo id.
+
+### GET `/promotions/my-registrations`
+
+Lay lich su promotion user da dang ky.
 
 ## Payments
 
@@ -176,6 +202,10 @@ Lay audit logs gan nhat.
 
 Lay trang thai health cua cac AI provider.
 
+### GET `/admin/reports/overview?from=2026-08-01&to=2026-08-31`
+
+Bao cao theo thoi gian ve users, videos, credits, payments va promotions.
+
 ### GET `/admin/reports/summary?days=30`
 
 Bao cao tong hop theo khoang thoi gian: user moi, video thanh cong/that bai, credit phat hanh/su dung, doanh thu va promotion.
@@ -202,7 +232,15 @@ Body:
 }
 ```
 
-### GET `/admin/users?search=demo`
+### GET `/admin/settings`
+
+Lay cau hinh `videoGeneration`, `upload` va `provider`.
+
+### PATCH `/admin/settings`
+
+Cap nhat cau hinh he thong va ghi audit log.
+
+### GET `/admin/users?page=1&limit=50&search=demo&status=active&role=user`
 
 Tim kiem va liet ke user.
 
@@ -214,7 +252,11 @@ Lay chi tiet user, transaction gan nhat va project gan nhat.
 
 Cap nhat name, role hoac status cua user.
 
-### POST `/admin/users/:id/credits`
+### PATCH `/admin/users/:id/status`
+
+Khoa hoac mo khoa user.
+
+### POST `/admin/users/:id/credits/adjust`
 
 Cong hoac tru credit thu cong. `amount` co the am de tru credit.
 
@@ -229,11 +271,19 @@ Body:
 
 ### GET `/admin/videos?status=failed`
 
-Lay danh sach video de admin kiem tra ket qua, failed cases va trang thai xu ly. Co the bo query `status` de xem tat ca.
+Lay danh sach video de admin kiem tra ket qua, failed cases va trang thai xu ly. Ho tro loc theo `status`, `engine`, `provider`, `userId`, `from`, `to`.
+
+### GET `/admin/videos/:id`
+
+Lay chi tiet video va generation job moi nhat.
 
 ### GET `/admin/pricing-plans`
 
 Lay toan bo goi credit, bao gom goi inactive.
+
+### GET `/admin/credit-packages`
+
+Alias dung trong de thi cho quan ly goi credit.
 
 ### POST `/admin/pricing-plans`
 
@@ -257,9 +307,21 @@ Body:
 
 Cap nhat goi credit, thuong dung de bat/tat goi hoac doi gia.
 
+### POST `/admin/credit-packages`
+
+Tao goi credit theo ten endpoint trong de thi.
+
+### PATCH `/admin/credit-packages/:id`
+
+Cap nhat goi credit.
+
+### PATCH `/admin/credit-packages/:id/status`
+
+Bat/tat goi credit.
+
 ### GET `/admin/payments?status=paid`
 
-Lay danh sach payment, co the loc theo status.
+Lay danh sach payment, co the loc theo `status`, `from`, `to`.
 
 ### GET `/admin/coupons`
 
@@ -305,6 +367,14 @@ Body:
 ### PATCH `/admin/promotions/:id`
 
 Cap nhat promotion, vi du bat/tat status hoac doi thoi gian hieu luc.
+
+### PATCH `/admin/promotions/:id/status`
+
+Cap nhat trang thai promotion.
+
+### GET `/admin/promotions/:id/registrations`
+
+Lay danh sach user da dang ky promotion va tong credit da tang.
 
 ## Account
 
