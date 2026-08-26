@@ -10,7 +10,11 @@ function walletSnapshot(user) {
   };
 }
 
-async function createTransaction({ user, project, job, type, amount, idempotencyKey, note }) {
+async function transactionExists(idempotencyKey) {
+  return CreditTransaction.findOne({ idempotencyKey });
+}
+
+async function createTransaction({ user, admin, project, job, type, amount, idempotencyKey, note, reason, balanceBefore }) {
   const exists = await CreditTransaction.findOne({ idempotencyKey });
 
   if (exists) {
@@ -19,17 +23,29 @@ async function createTransaction({ user, project, job, type, amount, idempotency
 
   return CreditTransaction.create({
     user: user._id,
+    admin,
     project,
     job,
     type,
     amount,
+    balanceBefore,
     balanceAfter: walletSnapshot(user),
     idempotencyKey,
-    note
+    note,
+    reason: reason || note || ''
   });
 }
 
 export async function reserveCredits({ userId, projectId, amount, idempotencyKey }) {
+  const exists = await transactionExists(idempotencyKey);
+
+  if (exists) {
+    const currentUser = await User.findById(userId);
+    return { ok: true, user: currentUser };
+  }
+
+  const beforeUser = await User.findById(userId);
+
   const user = await User.findOneAndUpdate(
     {
       _id: userId,
@@ -57,6 +73,7 @@ export async function reserveCredits({ userId, projectId, amount, idempotencyKey
     type: 'reserve',
     amount,
     idempotencyKey,
+    balanceBefore: beforeUser ? walletSnapshot(beforeUser) : undefined,
     note: 'Reserve credits for video generation'
   });
 
@@ -64,6 +81,13 @@ export async function reserveCredits({ userId, projectId, amount, idempotencyKey
 }
 
 export async function purchaseCredits({ userId, paymentId, amount, idempotencyKey }) {
+  const exists = await transactionExists(idempotencyKey);
+
+  if (exists) {
+    return User.findById(userId);
+  }
+
+  const beforeUser = await User.findById(userId);
   const user = await User.findByIdAndUpdate(
     userId,
     {
@@ -84,6 +108,7 @@ export async function purchaseCredits({ userId, paymentId, amount, idempotencyKe
     type: 'purchase',
     amount,
     idempotencyKey,
+    balanceBefore: beforeUser ? walletSnapshot(beforeUser) : undefined,
     note: `Credit purchase from payment ${paymentId}`
   });
 
@@ -91,6 +116,14 @@ export async function purchaseCredits({ userId, paymentId, amount, idempotencyKe
 }
 
 export async function adjustCredits({ userId, adminId, delta, reason, idempotencyKey }) {
+  const exists = await transactionExists(idempotencyKey);
+
+  if (exists) {
+    const currentUser = await User.findById(userId);
+    return { ok: true, user: currentUser };
+  }
+
+  const beforeUser = await User.findById(userId);
   const query = delta < 0
     ? {
         _id: userId,
@@ -121,16 +154,26 @@ export async function adjustCredits({ userId, adminId, delta, reason, idempotenc
 
   await createTransaction({
     user,
+    admin: adminId,
     type: 'manual_adjustment',
     amount: delta,
     idempotencyKey,
-    note: reason || `Manual credit adjustment by admin ${adminId}`
+    balanceBefore: beforeUser ? walletSnapshot(beforeUser) : undefined,
+    note: reason || `Manual credit adjustment by admin ${adminId}`,
+    reason
   });
 
   return { ok: true, user };
 }
 
 export async function grantPromotionCredits({ userId, promotionId, code, amount, idempotencyKey }) {
+  const exists = await transactionExists(idempotencyKey);
+
+  if (exists) {
+    return User.findById(userId);
+  }
+
+  const beforeUser = await User.findById(userId);
   const user = await User.findByIdAndUpdate(
     userId,
     {
@@ -151,6 +194,7 @@ export async function grantPromotionCredits({ userId, promotionId, code, amount,
     type: 'promotion_bonus',
     amount,
     idempotencyKey,
+    balanceBefore: beforeUser ? walletSnapshot(beforeUser) : undefined,
     note: `Promotion ${code} bonus from ${promotionId}`
   });
 
@@ -158,6 +202,13 @@ export async function grantPromotionCredits({ userId, promotionId, code, amount,
 }
 
 export async function refundPurchasedCredits({ userId, paymentId, amount, idempotencyKey }) {
+  const exists = await transactionExists(idempotencyKey);
+
+  if (exists) {
+    return User.findById(userId);
+  }
+
+  const beforeUser = await User.findById(userId);
   const user = await User.findOneAndUpdate(
     {
       _id: userId,
@@ -181,6 +232,7 @@ export async function refundPurchasedCredits({ userId, paymentId, amount, idempo
     type: 'refund',
     amount,
     idempotencyKey,
+    balanceBefore: beforeUser ? walletSnapshot(beforeUser) : undefined,
     note: `Credit refund from payment ${paymentId}`
   });
 
@@ -188,6 +240,13 @@ export async function refundPurchasedCredits({ userId, paymentId, amount, idempo
 }
 
 export async function captureReservedCredits({ userId, projectId, jobId, amount, idempotencyKey }) {
+  const exists = await transactionExists(idempotencyKey);
+
+  if (exists) {
+    return User.findById(userId);
+  }
+
+  const beforeUser = await User.findById(userId);
   const user = await User.findOneAndUpdate(
     {
       _id: userId,
@@ -213,6 +272,7 @@ export async function captureReservedCredits({ userId, projectId, jobId, amount,
     type: 'capture',
     amount,
     idempotencyKey,
+    balanceBefore: beforeUser ? walletSnapshot(beforeUser) : undefined,
     note: 'Capture reserved credits after completed generation'
   });
 
@@ -220,6 +280,13 @@ export async function captureReservedCredits({ userId, projectId, jobId, amount,
 }
 
 export async function releaseReservedCredits({ userId, projectId, jobId, amount, idempotencyKey, note }) {
+  const exists = await transactionExists(idempotencyKey);
+
+  if (exists) {
+    return User.findById(userId);
+  }
+
+  const beforeUser = await User.findById(userId);
   const user = await User.findOneAndUpdate(
     {
       _id: userId,
@@ -245,6 +312,7 @@ export async function releaseReservedCredits({ userId, projectId, jobId, amount,
     type: 'release',
     amount,
     idempotencyKey,
+    balanceBefore: beforeUser ? walletSnapshot(beforeUser) : undefined,
     note: note || 'Release reserved credits'
   });
 

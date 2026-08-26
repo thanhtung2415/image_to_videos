@@ -27,6 +27,10 @@ const promotionSchema = new mongoose.Schema(
       required: true,
       min: 1
     },
+    bonusCredit: {
+      type: Number,
+      min: 1
+    },
     maxRegistrations: {
       type: Number,
       default: 0
@@ -34,6 +38,18 @@ const promotionSchema = new mongoose.Schema(
     registeredCount: {
       type: Number,
       default: 0
+    },
+    currentRegistrations: {
+      type: Number,
+      default: 0
+    },
+    startAt: {
+      type: Date,
+      index: true
+    },
+    endAt: {
+      type: Date,
+      index: true
     },
     startsAt: {
       type: Date,
@@ -47,7 +63,7 @@ const promotionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'inactive'],
+      enum: ['draft', 'active', 'inactive', 'expired'],
       default: 'active',
       index: true
     },
@@ -56,9 +72,46 @@ const promotionSchema = new mongoose.Schema(
       trim: true,
       maxlength: 300,
       default: 'One registration per user'
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true
     }
   },
   { timestamps: true }
 );
+
+promotionSchema.pre('validate', function syncPromotionAliases(next) {
+  if (!this.bonusCredit) {
+    this.bonusCredit = this.creditBonus;
+  }
+
+  if (!this.creditBonus) {
+    this.creditBonus = this.bonusCredit;
+  }
+
+  if (!this.startAt) {
+    this.startAt = this.startsAt;
+  }
+
+  if (!this.startsAt) {
+    this.startsAt = this.startAt;
+  }
+
+  if (!this.endAt) {
+    this.endAt = this.endsAt;
+  }
+
+  if (!this.endsAt) {
+    this.endsAt = this.endAt;
+  }
+
+  if (this.currentRegistrations === undefined || this.currentRegistrations === null) {
+    this.currentRegistrations = this.registeredCount || 0;
+  }
+
+  next();
+});
 
 export const Promotion = mongoose.model('Promotion', promotionSchema);

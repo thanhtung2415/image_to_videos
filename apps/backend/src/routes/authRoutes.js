@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import express from 'express';
 import { z } from 'zod';
 import { User } from '../models/User.js';
-import { env } from '../config/env.js';
 import { requireAuth } from '../middleware/auth.js';
 import { signAccessToken } from '../services/tokenService.js';
 import { writeAuditLog } from '../services/auditService.js';
@@ -77,7 +76,7 @@ authRoutes.post('/register', async (req, res, next) => {
       name: data.name,
       email: data.email,
       passwordHash,
-      role: env.adminEmails.includes(data.email.toLowerCase()) ? 'admin' : 'user',
+      role: 'user',
       emailVerificationTokenHash: emailVerification.tokenHash
     });
 

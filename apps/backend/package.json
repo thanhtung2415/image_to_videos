@@ -8,6 +8,7 @@
     "dev:worker": "nodemon src/worker.js",
     "cleanup:local": "node src/scripts/cleanupLocalFiles.js",
     "backup:db": "node src/scripts/backupDatabase.js",
+    "seed": "node src/scripts/seedDemo.js",
     "seed:demo": "node src/scripts/seedDemo.js",
     "worker": "node src/worker.js",
     "start": "node src/server.js"

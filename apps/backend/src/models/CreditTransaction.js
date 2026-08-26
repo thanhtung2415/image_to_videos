@@ -8,6 +8,11 @@ const creditTransactionSchema = new mongoose.Schema(
       required: true,
       index: true
     },
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true
+    },
     project: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'VideoProject',
@@ -28,6 +33,12 @@ const creditTransactionSchema = new mongoose.Schema(
       type: Number,
       required: true
     },
+    balanceBefore: {
+      availableCredit: Number,
+      reservedCredit: Number,
+      lifetimePurchased: Number,
+      lifetimeUsed: Number
+    },
     balanceAfter: {
       availableCredit: Number,
       reservedCredit: Number,
@@ -40,6 +51,10 @@ const creditTransactionSchema = new mongoose.Schema(
       unique: true
     },
     note: {
+      type: String,
+      default: ''
+    },
+    reason: {
       type: String,
       default: ''
     }

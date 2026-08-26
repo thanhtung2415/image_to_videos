@@ -17,6 +17,7 @@ import { projectRoutes } from './routes/projectRoutes.js';
 import { promotionRoutes } from './routes/promotionRoutes.js';
 import { pricingRoutes } from './routes/pricingRoutes.js';
 import { notificationRoutes } from './routes/notificationRoutes.js';
+import { userRoutes } from './routes/userRoutes.js';
 import { apiRateLimit, authRateLimit, secureHeaders } from './middleware/security.js';
 import { requestLogger } from './middleware/requestLogger.js';
 
@@ -63,6 +64,7 @@ app.use('/api/pricing', pricingRoutes);
 app.use('/api/providers', providerRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/promotions', promotionRoutes);
+app.use('/api/users', userRoutes);
 
 app.use((error, req, res, next) => {
   if (error instanceof ZodError) {

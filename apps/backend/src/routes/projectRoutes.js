@@ -101,21 +101,47 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
       return res.status(402).json({ message: reservation.message });
     }
 
-    const job = await GenerationJob.create({
-      project: project._id,
-      user: req.user._id,
-      duration: data.duration,
-      resolution: data.resolution,
-      provider: providerName,
-      model: modelName,
-      costCredits,
-      status: 'queued'
-    });
+    let job;
 
-    const queueInfo = await enqueueGeneration(job._id);
-    job.queueMode = queueInfo.mode;
-    job.queueJobId = queueInfo.queueJobId;
-    await job.save();
+    try {
+      job = await GenerationJob.create({
+        project: project._id,
+        user: req.user._id,
+        duration: data.duration,
+        resolution: data.resolution,
+        provider: providerName,
+        model: modelName,
+        costCredits,
+        status: 'queued'
+      });
+
+      const queueInfo = await enqueueGeneration(job._id);
+      job.queueMode = queueInfo.mode;
+      job.queueJobId = queueInfo.queueJobId;
+      await job.save();
+    } catch (enqueueError) {
+      project.status = 'failed';
+      project.errorMessage = 'Khong the dua video vao hang doi xu ly';
+      await project.save();
+
+      if (job) {
+        job.status = 'failed';
+        job.errorMessage = enqueueError.message;
+        job.failedAt = new Date();
+        await job.save();
+      }
+
+      await releaseReservedCredits({
+        userId: req.user._id,
+        projectId: project._id,
+        jobId: job?._id,
+        amount: costCredits,
+        idempotencyKey: `enqueue-release:${project._id}`,
+        note: 'Release credits because enqueue failed'
+      });
+
+      return res.status(500).json({ message: 'Khong the dua video vao hang doi xu ly' });
+    }
 
     await notifyUser({
       userId: req.user._id,

@@ -4,20 +4,26 @@ import { grantPromotionCredits } from './creditService.js';
 
 export function promotionIsAvailable(promotion) {
   const now = new Date();
+  const start = promotion?.startAt || promotion?.startsAt;
+  const end = promotion?.endAt || promotion?.endsAt;
+  const registrations = promotion?.currentRegistrations ?? promotion?.registeredCount ?? 0;
 
   if (!promotion || promotion.status !== 'active') {
     return false;
   }
 
-  if (promotion.startsAt > now || promotion.endsAt < now) {
+  if (start > now || end < now) {
     return false;
   }
 
-  return !promotion.maxRegistrations || promotion.registeredCount < promotion.maxRegistrations;
+  return !promotion.maxRegistrations || registrations < promotion.maxRegistrations;
 }
 
-export async function validatePromotionCode(code) {
-  const promotion = await Promotion.findOne({ code: code.toUpperCase() });
+export async function validatePromotionCode(codeOrId) {
+  const value = String(codeOrId || '').trim();
+  const promotion = value.match(/^[a-f\d]{24}$/i)
+    ? await Promotion.findById(value)
+    : await Promotion.findOne({ code: value.toUpperCase() });
 
   if (!promotionIsAvailable(promotion)) {
     return {
@@ -30,8 +36,8 @@ export async function validatePromotionCode(code) {
   return { ok: true, promotion };
 }
 
-export async function registerPromotionForUser({ userId, code }) {
-  const validation = await validatePromotionCode(code);
+export async function registerPromotionForUser({ userId, code, promotionId }) {
+  const validation = await validatePromotionCode(promotionId || code);
 
   if (!validation.ok) {
     return validation;
@@ -40,8 +46,10 @@ export async function registerPromotionForUser({ userId, code }) {
   const promotion = validation.promotion;
   const now = new Date();
   const exists = await PromotionRegistration.findOne({
-    user: userId,
-    promotion: promotion._id
+    $or: [
+      { user: userId, promotion: promotion._id },
+      { userId, promotionId: promotion._id }
+    ]
   });
 
   if (exists) {
@@ -56,14 +64,27 @@ export async function registerPromotionForUser({ userId, code }) {
     {
       _id: promotion._id,
       status: 'active',
-      startsAt: { $lte: now },
-      endsAt: { $gte: now },
       $or: [
-        { maxRegistrations: 0 },
-        { $expr: { $lt: ['$registeredCount', '$maxRegistrations'] } }
+        { startAt: { $lte: now } },
+        { startsAt: { $lte: now } }
+      ],
+      $and: [
+        {
+          $or: [
+            { endAt: { $gte: now } },
+            { endsAt: { $gte: now } }
+          ]
+        },
+        {
+          $or: [
+            { maxRegistrations: 0 },
+            { $expr: { $lt: ['$registeredCount', '$maxRegistrations'] } },
+            { $expr: { $lt: ['$currentRegistrations', '$maxRegistrations'] } }
+          ]
+        }
       ]
     },
-    { $inc: { registeredCount: 1 } },
+    { $inc: { registeredCount: 1, currentRegistrations: 1 } },
     { new: true }
   );
 
@@ -78,9 +99,14 @@ export async function registerPromotionForUser({ userId, code }) {
   try {
     const registration = await PromotionRegistration.create({
       user: userId,
+      userId,
       promotion: updatedPromotion._id,
+      promotionId: updatedPromotion._id,
       code: updatedPromotion.code,
-      creditBonus: updatedPromotion.creditBonus
+      creditBonus: updatedPromotion.creditBonus,
+      creditGranted: updatedPromotion.creditBonus,
+      status: 'credited',
+      registeredAt: now
     });
 
     const user = await grantPromotionCredits({
@@ -99,7 +125,7 @@ export async function registerPromotionForUser({ userId, code }) {
     };
   } catch (error) {
     await Promotion.findByIdAndUpdate(updatedPromotion._id, {
-      $inc: { registeredCount: -1 }
+      $inc: { registeredCount: -1, currentRegistrations: -1 }
     });
 
     if (error.code === 11000) {

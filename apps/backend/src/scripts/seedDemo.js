@@ -36,13 +36,13 @@ async function seedDemo() {
     upsertUser({
       name: 'Admin Demo',
       email: 'admin@example.com',
-      password: '123456',
+      password: 'Admin123!',
       role: 'admin'
     }),
     upsertUser({
       name: 'User Demo',
       email: 'user@example.com',
-      password: '123456',
+      password: 'User123!',
       role: 'user'
     })
   ]);
@@ -66,8 +66,12 @@ async function seedDemo() {
       code: 'WELCOME10',
       description: 'Demo promotion for new users',
       creditBonus: 10,
+      bonusCredit: 10,
       maxRegistrations: 100,
+      currentRegistrations: 0,
+      startAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
       startsAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      endAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       endsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       status: 'active',
       conditions: 'One registration per user'

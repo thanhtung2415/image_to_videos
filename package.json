@@ -17,6 +17,7 @@
     "zip:submission": "node scripts/create-submission.mjs",
     "backup:db": "npm run backup:db --workspace apps/backend",
     "cleanup:local": "npm run cleanup:local --workspace apps/backend",
+    "seed": "npm run seed --workspace apps/backend",
     "seed:demo": "npm run seed:demo --workspace apps/backend",
     "start": "npm run start --workspace apps/backend"
   }
