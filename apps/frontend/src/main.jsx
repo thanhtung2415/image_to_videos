@@ -2122,7 +2122,7 @@ function Dashboard({ user, onLogout }) {
   }
 
   return (
-    <main className="dashboard">
+    <main className={`dashboard ${currentUser.role === 'admin' ? 'is-admin' : 'is-user'}`}>
       <header className="topbar">
         <div>
           <span className="eyebrow">Commercial MVP</span>
@@ -2139,13 +2139,12 @@ function Dashboard({ user, onLogout }) {
         </div>
       </header>
 
-      <div className="layout">
+      <div className={`layout ${currentUser.role === 'admin' ? 'admin-layout' : ''}`}>
         <div className="sidebar-stack">
           <ProjectForm onCreated={handleCreated} />
           <PricingPanel onPurchased={handlePurchased} onWalletChanged={handleWalletChanged} />
           <NotificationsPanel />
           <AccountPanel user={currentUser} onUpdated={updateCurrentUser} onDeleted={onLogout} />
-          {currentUser.role === 'admin' && <AdminPanel />}
         </div>
 
         <section className="panel history-panel">
@@ -2164,6 +2163,8 @@ function Dashboard({ user, onLogout }) {
             ))}
           </div>
         </section>
+
+        {currentUser.role === 'admin' && <AdminPanel />}
       </div>
     </main>
   );
