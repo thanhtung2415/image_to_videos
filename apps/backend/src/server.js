@@ -25,12 +25,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const viteDevPorts = [5173, 5174, 5175, 5176, 5177, 5178, 5179];
 const devOrigins = [
   env.frontendUrl,
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://localhost:5174',
-  'http://127.0.0.1:5174'
+  ...viteDevPorts.flatMap((port) => [
+    `http://localhost:${port}`,
+    `http://127.0.0.1:${port}`
+  ])
 ];
 const allowedOrigins = new Set(devOrigins.filter(Boolean));
 
