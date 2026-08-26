@@ -112,13 +112,14 @@ Replicate `minimax/video-01` duoc uu tien cho demo AI neu token kha dung. Fal va
 
 1. Nguoi dung dang ky hoac dang nhap.
 2. Tai khoan moi co 0 credit neu khong co promotion hop le.
-3. Nguoi dung upload anh JPG, PNG hoac WEBP toi da 5MB.
-4. Backend reserve credits va tao generation job.
-5. Worker tao video bang FFmpeg hoac AI provider.
-6. Video output duoc upload len Cloudinary neu da cau hinh storage.
-7. Khi video thanh cong, backend capture reserved credits.
-8. Neu job loi, backend release credits ve vi.
-9. Frontend tu cap nhat trang thai job va hien video khi hoan tat.
+3. Khi dang ky, user co the nhap promotion code de nhan credit bonus neu promotion con hieu luc.
+4. Nguoi dung upload anh JPG, PNG hoac WEBP toi da 5MB.
+5. Backend reserve credits va tao generation job.
+6. Worker tao video bang FFmpeg hoac AI provider.
+7. Video output duoc upload len Cloudinary neu da cau hinh storage.
+8. Khi video thanh cong, backend capture reserved credits.
+9. Neu job loi, backend release credits ve vi.
+10. Frontend tu cap nhat trang thai job, credit wallet va hien video khi hoan tat.
 
 ## Chuc nang da co
 

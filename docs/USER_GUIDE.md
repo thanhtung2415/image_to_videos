@@ -12,14 +12,15 @@ Chay `npm run seed:demo` de tao tai khoan mau.
 ## User flow
 
 1. Dang ky hoac dang nhap.
-2. Neu tai khoan moi chua co credit, vao `Credit packages` de mua goi mock hoac nhap promotion code.
-3. Trong `Tao video moi`, nhap tieu de, prompt, thoi luong, ty le.
-4. Chon `FFmpeg stable` de demo on dinh hoac `AI provider` de tao video co chuyen dong bang Replicate/fal.ai.
-5. Upload anh JPG, PNG hoac WEBP.
-6. Bam `Tao video`.
-7. Theo doi status trong `Video da tao`.
-8. Khi status la `completed`, xem video tren trinh duyet hoac bam `Download`.
-9. User co the xem `Credit history`, notification, export data, cap nhat ho so va doi mat khau.
+2. Khi dang ky, co the nhap promotion code hop le de nhan credit bonus.
+3. Neu tai khoan moi chua co credit, vao `Credit packages` de mua goi mock hoac nhap promotion code.
+4. Trong `Tao video moi`, nhap tieu de, prompt, thoi luong, ty le.
+5. Chon `FFmpeg stable` de demo on dinh hoac `AI provider` de tao video co chuyen dong bang Replicate/fal.ai.
+6. Upload anh JPG, PNG hoac WEBP.
+7. Bam `Tao video`.
+8. Theo doi status trong `Video da tao`.
+9. Khi status la `completed`, xem video tren trinh duyet hoac bam `Download`.
+10. User co the xem `Credit history`, notification, export data, cap nhat ho so va doi mat khau.
 
 ## Admin flow
 

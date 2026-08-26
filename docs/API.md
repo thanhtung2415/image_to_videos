@@ -22,7 +22,8 @@ Body:
 {
   "name": "Nguyen Van A",
   "email": "demo@example.com",
-  "password": "123456"
+  "password": "123456",
+  "promotionCode": "WELCOME10"
 }
 ```
 
