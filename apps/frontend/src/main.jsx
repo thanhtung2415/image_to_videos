@@ -30,6 +30,7 @@ import {
   getAdminCostSummary,
   getAdminContentReports,
   getAdminCoupons,
+  getAdminCreditTransactions,
   getAdminOverview,
   getAdminPayments,
   getAdminPricingPlans,
@@ -563,6 +564,7 @@ function NotificationsPanel() {
 function AdminPanel() {
   const [overview, setOverview] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [creditTransactions, setCreditTransactions] = useState([]);
   const [health, setHealth] = useState([]);
   const [costSummary, setCostSummary] = useState(null);
   const [reportSummary, setReportSummary] = useState(null);
@@ -577,6 +579,7 @@ function AdminPanel() {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [videoStatusFilter, setVideoStatusFilter] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [creditTypeFilter, setCreditTypeFilter] = useState('');
   const [userStatusFilter, setUserStatusFilter] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('');
   const [reportRange, setReportRange] = useState(() => {
@@ -627,7 +630,8 @@ function AdminPanel() {
         adminVideosResult,
         pricingPlansResult,
         paymentsResult,
-        auditLogsResult
+        auditLogsResult,
+        creditTransactionsResult
       ] = await Promise.all([
         getAdminOverview(),
         getAdminProviderHealth(),
@@ -642,7 +646,8 @@ function AdminPanel() {
         getAdminVideos(videoStatusFilter),
         getAdminPricingPlans(),
         getAdminPayments(paymentStatusFilter),
-        getAdminAuditLogs()
+        getAdminAuditLogs(),
+        getAdminCreditTransactions({ type: creditTypeFilter })
       ]);
       setOverview(overviewResult.overview);
       setAuditLogs(auditLogsResult.logs || []);
@@ -651,6 +656,7 @@ function AdminPanel() {
       setCoupons(couponResult.coupons || []);
       setPricingPlans(pricingPlansResult.plans || []);
       setPayments(paymentsResult.payments || []);
+      setCreditTransactions(creditTransactionsResult.transactions || []);
       setReports(reportResult.reports || []);
       setUsers(usersResult.users || []);
       setPromotions(promotionResult.promotions || []);
@@ -868,9 +874,24 @@ function AdminPanel() {
         amount: Number(creditForm.amount),
         reason: creditForm.reason
       });
+      const transactionResult = await getAdminCreditTransactions({ type: creditTypeFilter });
       await handleSelectUser(result.user.id);
       setUsers((items) => items.map((item) => (item.id === result.user.id ? result.user : item)));
+      setCreditTransactions(transactionResult.transactions || []);
       setMessage('Credit adjusted.');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleCreditTransactionFilter(event) {
+    const nextType = event.target.value;
+    setCreditTypeFilter(nextType);
+    setError('');
+
+    try {
+      const result = await getAdminCreditTransactions({ type: nextType });
+      setCreditTransactions(result.transactions || []);
     } catch (err) {
       setError(err.message);
     }
@@ -1098,6 +1119,36 @@ function AdminPanel() {
           <article key={log._id}>
             <strong>{log.action}</strong>
             <span>{log.resourceType} - {new Date(log.createdAt).toLocaleString('vi-VN')}</span>
+          </article>
+        ))}
+      </div>
+
+      <div className="section-title compact">
+        <Sparkles size={20} />
+        <h3>Credit transaction history</h3>
+      </div>
+
+      <label>
+        Transaction type
+        <select value={creditTypeFilter} onChange={handleCreditTransactionFilter}>
+          <option value="">all</option>
+          <option value="purchase">purchase</option>
+          <option value="reserve">reserve</option>
+          <option value="capture">capture</option>
+          <option value="release">release</option>
+          <option value="refund">refund</option>
+          <option value="manual_adjustment">manual_adjustment</option>
+          <option value="promotion_bonus">promotion_bonus</option>
+        </select>
+      </label>
+
+      <div className="compact-list">
+        {creditTransactions.length === 0 && <div className="empty small">No credit transactions.</div>}
+        {creditTransactions.slice(0, 8).map((transaction) => (
+          <article key={transaction._id}>
+            <strong>{transaction.type}: {transaction.amount}</strong>
+            <span>{transaction.user?.email || 'unknown user'} - balance {transaction.balanceAfter?.availableCredit ?? 'N/A'} credits</span>
+            <span>{transaction.project?.title || transaction.reason || transaction.note || 'System transaction'} - {new Date(transaction.createdAt).toLocaleString('vi-VN')}</span>
           </article>
         ))}
       </div>

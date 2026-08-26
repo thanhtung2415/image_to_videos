@@ -29,6 +29,7 @@ Base URL local: `http://localhost:4000/api`
 | PATCH | `/admin/users/:id` | Yes | Admin | Update user profile/role/status. |
 | PATCH | `/admin/users/:id/status` | Yes | Admin | Lock or unlock a user. |
 | POST | `/admin/users/:id/credits/adjust` | Yes | Admin | Add/subtract credit and create manual adjustment transaction. |
+| GET | `/admin/credit-transactions` | Yes | Admin | Read all credit transactions with type, userId, from/to and pagination filters. |
 | GET | `/admin/videos` | Yes | Admin | Filter videos by status, engine, provider, userId, from and to. |
 | GET | `/admin/videos/:id` | Yes | Admin | Read video detail and latest generation job. |
 | GET | `/admin/reports/overview` | Yes | Admin | Time-filtered users, videos, credits, payments and promotions report. |

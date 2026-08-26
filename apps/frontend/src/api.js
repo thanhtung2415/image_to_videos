@@ -112,6 +112,18 @@ export function getAdminAuditLogs() {
   return apiFetch('/admin/audit-logs');
 }
 
+export function getAdminCreditTransactions(filters = {}) {
+  const params = new URLSearchParams();
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      params.set(key, value);
+    }
+  });
+
+  return apiFetch(`/admin/credit-transactions${params.toString() ? `?${params}` : ''}`);
+}
+
 export function getAdminProviderHealth() {
   return apiFetch('/admin/provider-health');
 }

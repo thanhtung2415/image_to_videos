@@ -198,6 +198,10 @@ Lay thong ke tong quan user, project, job, payment va content report.
 
 Lay audit logs gan nhat.
 
+### GET `/admin/credit-transactions?type=purchase&userId=<id>&from=2026-08-01&to=2026-08-31&page=1&limit=50`
+
+Lay toan bo lich su giao dich credit cho admin. Ho tro loc theo `type`, `userId`, `from`, `to`, `page` va `limit`.
+
 ### GET `/admin/provider-health`
 
 Lay trang thai health cua cac AI provider.

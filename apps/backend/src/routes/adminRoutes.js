@@ -49,6 +49,16 @@ const creditAdjustmentSchema = z.object({
   reason: z.string().max(200).default('')
 });
 
+const creditTransactionTypes = [
+  'purchase',
+  'reserve',
+  'capture',
+  'release',
+  'refund',
+  'manual_adjustment',
+  'promotion_bonus'
+];
+
 const contentReportUpdateSchema = z.object({
   status: z.enum(['open', 'reviewing', 'resolved', 'dismissed'])
 });
@@ -363,6 +373,48 @@ adminRoutes.get('/audit-logs', async (req, res, next) => {
   try {
     const logs = await AuditLog.find().sort({ createdAt: -1 }).limit(100);
     res.json({ logs });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.get('/credit-transactions', async (req, res, next) => {
+  try {
+    const page = Math.max(1, Number(req.query.page || 1));
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit || 50)));
+    const filter = { ...queryDateRange(req) };
+    const type = String(req.query.type || '').trim();
+    const userId = String(req.query.userId || '').trim();
+
+    if (type) {
+      if (!creditTransactionTypes.includes(type)) {
+        return res.status(400).json({ message: 'Loai giao dich credit khong hop le' });
+      }
+
+      filter.type = type;
+    }
+
+    if (userId) {
+      if (!/^[a-f\d]{24}$/i.test(userId)) {
+        return res.status(400).json({ message: 'User id khong hop le' });
+      }
+
+      filter.user = userId;
+    }
+
+    const [transactions, total] = await Promise.all([
+      CreditTransaction.find(filter)
+        .populate('user', 'name email role status')
+        .populate('admin', 'name email')
+        .populate('project', 'title status')
+        .populate('job', 'status providerGenerationId')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      CreditTransaction.countDocuments(filter)
+    ]);
+
+    res.json({ transactions, pagination: { page, limit, total } });
   } catch (error) {
     next(error);
   }

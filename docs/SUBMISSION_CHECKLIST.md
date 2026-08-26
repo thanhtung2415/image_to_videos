@@ -51,9 +51,10 @@ The zip is created in `submissions` and contains only tracked source files from 
 7. Credit transaction history.
 8. Admin 30 day report.
 9. Admin user management and manual credit adjustment.
-10. Admin video review or content reports.
-11. Admin promotion/package settings.
-12. MongoDB Atlas collections or database backup.
+10. Admin all credit transaction history filter.
+11. Admin video review or content reports.
+12. Admin promotion/package settings.
+13. MongoDB Atlas collections or database backup.
 
 ## Demo video flow
 

@@ -44,12 +44,13 @@ Mo `http://localhost:5173`.
 | AC12 | Admin user detail | Xem thong tin user, transactions va projects gan nhat |
 | AC13 | Lock/unlock user | Locked user bi tu choi login/auth request |
 | AC14 | Manual credit adjustment | Cong/tru credit co confirm, khong am wallet, co transaction `manual_adjustment` |
-| AC15 | Credit packages | Tao/sua/bat/tat package; user chi thay package active |
-| AC16 | Payment management | Xem payment theo status va refund payment mock |
-| AC17 | Promotion management | Tao/bat/tat promotion, xem registrations va tong credit granted |
-| AC18 | Video management | Loc video theo status, xem detail: user, prompt, image, output, engine, provider, model, cost, error |
-| AC19 | Settings | Doi video cost, upload limit va default provider; backend luu vao `settings` |
-| AC20 | Reports | From/To filter tra ve user, video, credit, revenue va promotion tu MongoDB |
+| AC15 | All credit transactions | Admin xem toan bo lich su credit va loc theo type/user/time |
+| AC16 | Credit packages | Tao/sua/bat/tat package; user chi thay package active |
+| AC17 | Payment management | Xem payment theo status va refund payment mock |
+| AC18 | Promotion management | Tao/bat/tat promotion, xem registrations va tong credit granted |
+| AC19 | Video management | Loc video theo status, xem detail: user, prompt, image, output, engine, provider, model, cost, error |
+| AC20 | Settings | Doi video cost, upload limit va default provider; backend luu vao `settings` |
+| AC21 | Reports | From/To filter tra ve user, video, credit, revenue va promotion tu MongoDB |
 
 ## Evidence can chup
 
