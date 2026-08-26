@@ -129,6 +129,20 @@ function buildVideoStats(projects) {
   };
 }
 
+function getGenerationProgress(status) {
+  const progressMap = {
+    queued: 18,
+    processing: 54,
+    post_processing: 72,
+    uploading: 86,
+    completed: 100,
+    failed: 100,
+    cancelled: 100
+  };
+
+  return progressMap[status] || 0;
+}
+
 function AuthPanel({ onSignedIn }) {
   const [mode, setMode] = useState('login');
   const [form, setForm] = useState(emptyAuth);
@@ -232,7 +246,7 @@ function AuthPanel({ onSignedIn }) {
   );
 }
 
-function ProjectForm({ onCreated }) {
+function ProjectForm({ onCreated, onDraftChange, user }) {
   const [title, setTitle] = useState('Video demo tu hinh anh');
   const [prompt, setPrompt] = useState('Tao chuyen dong nhe, cam giac cinematic.');
   const [duration, setDuration] = useState('5');
@@ -267,6 +281,28 @@ function ProjectForm({ onCreated }) {
   const selectedModels = selectedProvider?.models || [];
   const selectedCost = generationMode === 'ai' ? 20 : 5;
   const imageSize = image ? `${(image.size / 1024 / 1024).toFixed(2)} MB` : '';
+  const balance = user?.creditWallet?.availableCredit ?? 0;
+  const providerUnavailable = generationMode === 'ai' && (!selectedProvider || !selectedProvider.enabled);
+  const notEnoughCredits = balance < selectedCost;
+  const canGenerate = image && !loading && !providerUnavailable && !notEnoughCredits;
+
+  useEffect(() => {
+    onDraftChange?.({
+      title,
+      prompt,
+      duration,
+      resolution,
+      generationMode,
+      provider,
+      model,
+      image,
+      preview,
+      selectedCost,
+      balance,
+      providerUnavailable,
+      notEnoughCredits
+    });
+  }, [title, prompt, duration, resolution, generationMode, provider, model, image, preview, selectedCost, balance, providerUnavailable, notEnoughCredits, onDraftChange]);
 
   function handleImageChange(file) {
     setImage(file);
@@ -325,56 +361,73 @@ function ProjectForm({ onCreated }) {
           <span className="field-hint">{prompt.length}/600 characters</span>
         </label>
 
-        <div className="form-grid">
-          <label>
-            Thoi luong
-            <select value={duration} onChange={(event) => setDuration(event.target.value)}>
-              <option value="3">3 giay</option>
-              <option value="5">5 giay</option>
-              <option value="8">8 giay</option>
-              <option value="10">10 giay</option>
-            </select>
-          </label>
-
-          <label>
-            Ty le
-            <select value={resolution} onChange={(event) => setResolution(event.target.value)}>
-              <option value="1280x720">Landscape 16:9</option>
-              <option value="720x1280">Portrait 9:16</option>
-              <option value="1024x1024">Square 1:1</option>
-            </select>
-          </label>
+        <div className="control-group">
+          <span>Duration</span>
+          <div className="segmented-control">
+            {[
+              ['3', '3 sec'],
+              ['5', '5 sec'],
+              ['8', '8 sec'],
+              ['10', '10 sec']
+            ].map(([value, label]) => (
+              <button className={duration === value ? 'active' : ''} key={value} type="button" onClick={() => setDuration(value)}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="form-grid">
-          <label>
-            Engine
-            <select value={generationMode} onChange={(event) => setGenerationMode(event.target.value)}>
-              <option value="ffmpeg">FFmpeg stable</option>
-              <option value="ai">AI provider</option>
-            </select>
-          </label>
-
-          <label>
-            Provider
-            <select
-              value={provider}
-              disabled={generationMode !== 'ai'}
-              onChange={(event) => {
-                const nextProvider = event.target.value;
-                const nextModels = providers.find((item) => item.name === nextProvider)?.models || [];
-                setProvider(nextProvider);
-                setModel(nextModels[0]?.id || '');
-              }}
-            >
-              {providers.map((item) => (
-                <option key={item.name} value={item.name}>
-                  {item.name} {item.enabled ? '' : '(not configured)'}
-                </option>
-              ))}
-            </select>
-          </label>
+        <div className="control-group">
+          <span>Aspect Ratio</span>
+          <div className="segmented-control">
+            {[
+              ['1280x720', '16:9'],
+              ['720x1280', '9:16'],
+              ['1024x1024', '1:1']
+            ].map(([value, label]) => (
+              <button className={resolution === value ? 'active' : ''} key={value} type="button" onClick={() => setResolution(value)}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
+
+        <div className="control-group">
+          <span>Model</span>
+          <div className="model-card-grid">
+            <button className={generationMode === 'ffmpeg' ? 'model-card selected' : 'model-card'} type="button" onClick={() => setGenerationMode('ffmpeg')}>
+              <strong>FFmpeg</strong>
+              <span>Fast · Stable</span>
+              <small>5 credits</small>
+            </button>
+            <button className={generationMode === 'ai' ? 'model-card selected' : 'model-card'} type="button" onClick={() => setGenerationMode('ai')}>
+              <strong>AI Provider</strong>
+              <span>Motion generation</span>
+              <small>20 credits</small>
+            </button>
+          </div>
+        </div>
+
+        {generationMode === 'ai' && (
+          <div className="provider-card-grid">
+            {providers.map((item) => (
+              <button
+                className={provider === item.name ? 'provider-card selected' : 'provider-card'}
+                disabled={!item.enabled}
+                key={item.name}
+                type="button"
+                onClick={() => {
+                  const nextModels = item.models || [];
+                  setProvider(item.name);
+                  setModel(nextModels[0]?.id || '');
+                }}
+              >
+                <strong>{item.name}</strong>
+                <span>{item.enabled ? 'Ready' : 'Unavailable'}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {generationMode === 'ai' && (
           <label>
@@ -404,6 +457,13 @@ function ProjectForm({ onCreated }) {
         />
 
         {error && <div className="alert">{error}</div>}
+        {providerUnavailable && <div className="alert">Provider nay chua duoc cau hinh API key.</div>}
+        {notEnoughCredits && (
+          <div className="alert action-alert">
+            <span>Khong du credit de tao video.</span>
+            <strong>Buy Credits hoac dung Promotion de tiep tuc.</strong>
+          </div>
+        )}
 
         <div className="cost-strip">
           <div>
@@ -411,14 +471,14 @@ function ProjectForm({ onCreated }) {
             <strong>{selectedCost} credits</strong>
           </div>
           <div>
-            <span>Quality</span>
-            <strong>720p demo</strong>
+            <span>Your balance</span>
+            <strong>{balance} credits</strong>
           </div>
         </div>
 
-        <button className="primary-button" disabled={!image || loading} type="submit">
+        <button className="primary-button" disabled={!canGenerate} type="submit">
           {loading ? <LoaderCircle className="spin" size={18} /> : <Film size={18} />}
-          Tao video
+          {loading ? 'Generating...' : 'Generate Video'}
         </button>
       </form>
     </section>
@@ -2067,6 +2127,29 @@ function AppSidebar({ activeView, currentUser, mobileOpen, onClose, onLogout, on
   const isAdmin = currentUser.role === 'admin';
   const navigation = isAdmin ? adminNavigation : userNavigation;
   const creditBalance = currentUser.creditWallet?.availableCredit ?? 0;
+  const primaryNav = isAdmin ? navigation : navigation.slice(0, 3);
+  const accountNav = isAdmin ? [] : navigation.slice(3);
+
+  function renderNavItems(items) {
+    return items.map((item) => {
+      const Icon = item.icon;
+
+      return (
+        <button
+          className={activeView === item.id ? 'active' : ''}
+          key={item.id}
+          type="button"
+          onClick={() => {
+            onNavigate(item.id);
+            onClose();
+          }}
+        >
+          <Icon size={18} />
+          <span>{item.label}</span>
+        </button>
+      );
+    });
+  }
 
   return (
     <aside className={`app-sidebar ${mobileOpen ? 'is-open' : ''}`}>
@@ -2084,24 +2167,10 @@ function AppSidebar({ activeView, currentUser, mobileOpen, onClose, onLogout, on
       </div>
 
       <nav className="sidebar-nav" aria-label={isAdmin ? 'Admin navigation' : 'User navigation'}>
-        {navigation.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <button
-              className={activeView === item.id ? 'active' : ''}
-              key={item.id}
-              type="button"
-              onClick={() => {
-                onNavigate(item.id);
-                onClose();
-              }}
-            >
-              <Icon size={18} />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
+        {!isAdmin && <span className="nav-label">Create</span>}
+        {renderNavItems(primaryNav)}
+        {!isAdmin && <span className="nav-label">Account</span>}
+        {renderNavItems(accountNav)}
       </nav>
 
       <div className="sidebar-footer">
@@ -2134,7 +2203,7 @@ function DashboardHome({ currentUser, projects, onGoCreate, onGoVideos }) {
         <div>
           <span className="eyebrow">Commercial MVP</span>
           <h1>Welcome back, {currentUser.name}</h1>
-          <p>Turn your images into short cinematic videos with AI providers or the stable FFmpeg demo engine.</p>
+          <p>What will you create today?</p>
         </div>
         <div className="hero-actions">
           <button className="primary-button" type="button" onClick={onGoCreate}>
@@ -2146,6 +2215,20 @@ function DashboardHome({ currentUser, projects, onGoCreate, onGoVideos }) {
             View My Videos
           </button>
         </div>
+      </section>
+
+      <section className="spotlight-composer">
+        <div>
+          <span className="eyebrow">Spotlight composer</span>
+          <p>Describe your video idea, upload an image, then let the workspace prepare a short cinematic result.</p>
+        </div>
+        <button className="composer-box" type="button" onClick={onGoCreate}>
+          <span>Slow cinematic camera move, natural motion, soft light...</span>
+          <strong>
+            <Upload size={16} />
+            Open Studio
+          </strong>
+        </button>
       </section>
 
       <section className="stats-grid">
@@ -2195,7 +2278,98 @@ function DashboardHome({ currentUser, projects, onGoCreate, onGoVideos }) {
   );
 }
 
+function CreativePreview({ draft, latestProject, onGoVideos }) {
+  const progress = getGenerationProgress(latestProject?.status);
+  const isComplete = latestProject?.status === 'completed';
+  const isFailed = latestProject?.status === 'failed';
+  const isCancelled = latestProject?.status === 'cancelled';
+  const previewImage = draft.preview || latestProject?.sourceImage?.url;
+
+  return (
+    <section className="panel preview-panel">
+      <div className="section-title split-title">
+        <div>
+          <span className="eyebrow">Preview</span>
+          <h2>{isComplete ? 'Video Ready' : 'Creative preview'}</h2>
+        </div>
+        {latestProject && <StatusBadge status={latestProject.status} />}
+      </div>
+
+      <div className="preview-stage">
+        {isComplete && latestProject.outputVideo?.url ? (
+          <video controls src={latestProject.outputVideo.url} />
+        ) : previewImage ? (
+          <img src={previewImage} alt="Creative preview" />
+        ) : (
+          <div className="preview-empty">
+            <ImagePlus size={34} />
+            <strong>Your image preview will appear here</strong>
+            <span>Upload a JPG, PNG, or WEBP source image to compose the shot.</span>
+          </div>
+        )}
+      </div>
+
+      <div className="preview-meta">
+        <div>
+          <span>Prompt</span>
+          <strong>{draft.prompt || latestProject?.prompt || 'Describe how the image should move...'}</strong>
+        </div>
+        <div>
+          <span>Engine</span>
+          <strong>{draft.generationMode === 'ai' ? draft.provider : 'FFmpeg stable'}</strong>
+        </div>
+        <div>
+          <span>Duration</span>
+          <strong>{draft.duration || latestProject?.durationSeconds || 5} sec</strong>
+        </div>
+        <div>
+          <span>Cost</span>
+          <strong>{draft.selectedCost || latestProject?.costCredits || 5} credits</strong>
+        </div>
+      </div>
+
+      {latestProject && !isComplete && (
+        <div className="progress-panel">
+          <div className="progress-copy">
+            <strong>{isFailed ? 'Generation failed' : isCancelled ? 'Generation cancelled' : 'Generating your video'}</strong>
+            <span>{isFailed ? 'Credits are released if the job failed.' : isCancelled ? 'Credits released.' : `${progress}%`}</span>
+          </div>
+          <div className="progress-track">
+            <span style={{ width: `${progress}%` }} />
+          </div>
+          <div className="timeline">
+            {['Request received', 'Queued', 'Processing', 'Uploading', 'Completed'].map((item, index) => (
+              <span className={progress >= [10, 18, 54, 86, 100][index] ? 'done' : progress >= [0, 18, 54, 86, 100][index] ? 'active' : ''} key={item}>
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isComplete && latestProject.outputVideo?.url && (
+        <div className="card-actions">
+          <a className="ghost-link" href={latestProject.outputVideo.url} download>
+            <Download size={16} />
+            Download
+          </a>
+          <button className="ghost-button" type="button" onClick={onGoVideos}>
+            View Details
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function HistoryPanel({ error, loading, onCancelProject, onRefreshProject, projects }) {
+  const [filter, setFilter] = useState('all');
+  const filteredProjects = filter === 'all'
+    ? projects
+    : projects.filter((project) => (filter === 'processing'
+      ? ['queued', 'processing', 'post_processing', 'uploading'].includes(project.status)
+      : project.status === filter));
+
   return (
     <section className="panel history-panel">
       <div className="section-title split-title">
@@ -2207,6 +2381,13 @@ function HistoryPanel({ error, loading, onCancelProject, onRefreshProject, proje
       </div>
 
       {error && <div className="alert">{error}</div>}
+      <div className="gallery-tabs">
+        {['all', 'completed', 'processing', 'failed', 'cancelled'].map((item) => (
+          <button className={filter === item ? 'active' : ''} key={item} type="button" onClick={() => setFilter(item)}>
+            {item}
+          </button>
+        ))}
+      </div>
       {loading && (
         <div className="skeleton-list">
           <div />
@@ -2214,7 +2395,7 @@ function HistoryPanel({ error, loading, onCancelProject, onRefreshProject, proje
           <div />
         </div>
       )}
-      {!loading && projects.length === 0 && (
+      {!loading && filteredProjects.length === 0 && (
         <div className="empty">
           <strong>No videos yet</strong>
           <span>Create your first video to see it here.</span>
@@ -2222,7 +2403,7 @@ function HistoryPanel({ error, loading, onCancelProject, onRefreshProject, proje
       )}
 
       <div className="project-list">
-        {projects.map((project) => (
+        {filteredProjects.map((project) => (
           <ProjectCard key={project._id} project={project} onCancel={onCancelProject} onRefresh={onRefreshProject} />
         ))}
       </div>
@@ -2237,6 +2418,18 @@ function Dashboard({ user, onLogout }) {
   const [error, setError] = useState('');
   const [activeView, setActiveView] = useState(user.role === 'admin' ? 'admin-dashboard' : 'home');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [draft, setDraft] = useState({
+    title: 'Video demo tu hinh anh',
+    prompt: 'Tao chuyen dong nhe, cam giac cinematic.',
+    duration: '5',
+    resolution: '1280x720',
+    generationMode: 'ffmpeg',
+    provider: 'ffmpeg',
+    model: '',
+    preview: '',
+    selectedCost: 5,
+    balance: user.creditWallet?.availableCredit ?? 0
+  });
 
   const activeProjects = useMemo(
     () => projects.filter((project) => ['queued', 'processing', 'post_processing', 'uploading'].includes(project.status)),
@@ -2390,13 +2583,11 @@ function Dashboard({ user, onLogout }) {
     if (activeView === 'create') {
       return (
         <div className="create-workspace">
-          <ProjectForm onCreated={handleCreated} />
-          <HistoryPanel
-            error={error}
-            loading={loading}
-            projects={projects.slice(0, 4)}
-            onCancelProject={handleCancelProject}
-            onRefreshProject={refreshProject}
+          <ProjectForm onCreated={handleCreated} onDraftChange={setDraft} user={currentUser} />
+          <CreativePreview
+            draft={draft}
+            latestProject={projects[0]}
+            onGoVideos={() => setActiveView('videos')}
           />
         </div>
       );
