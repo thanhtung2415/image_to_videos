@@ -4,6 +4,7 @@ import { Coupon } from '../models/Coupon.js';
 import { Promotion } from '../models/Promotion.js';
 import { User } from '../models/User.js';
 import { seedDefaultPricingPlans } from '../services/pricingService.js';
+import { getVideoCostSettings } from '../services/settingService.js';
 
 async function upsertUser({ name, email, password, role }) {
   const passwordHash = await bcrypt.hash(password, 10);
@@ -29,6 +30,7 @@ async function upsertUser({ name, email, password, role }) {
 async function seedDemo() {
   await connectDatabase();
   await seedDefaultPricingPlans();
+  await getVideoCostSettings();
 
   await Promise.all([
     upsertUser({

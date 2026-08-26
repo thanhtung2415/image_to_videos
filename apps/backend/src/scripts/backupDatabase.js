@@ -17,6 +17,7 @@ import { Promotion } from '../models/Promotion.js';
 import { PromotionRegistration } from '../models/PromotionRegistration.js';
 import { ProviderHealth } from '../models/ProviderHealth.js';
 import { Refund } from '../models/Refund.js';
+import { Setting } from '../models/Setting.js';
 import { User } from '../models/User.js';
 import { VideoProject } from '../models/VideoProject.js';
 
@@ -40,6 +41,7 @@ const collections = {
   promotion_registrations: PromotionRegistration,
   provider_health: ProviderHealth,
   refunds: Refund,
+  settings: Setting,
   users: User,
   video_projects: VideoProject
 };

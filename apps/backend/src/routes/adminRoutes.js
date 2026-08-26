@@ -15,6 +15,7 @@ import { requireAdmin } from '../middleware/requireAdmin.js';
 import { getCostSummary } from '../services/costService.js';
 import { adjustCredits } from '../services/creditService.js';
 import { listProviderHealth } from '../services/providerHealthService.js';
+import { getVideoCostSettings, updateVideoCostSettings } from '../services/settingService.js';
 import { writeAuditLog } from '../services/auditService.js';
 
 export const adminRoutes = express.Router();
@@ -53,6 +54,13 @@ const promotionSchema = z.object({
 });
 
 const promotionUpdateSchema = promotionSchema.partial();
+
+const videoCostSchema = z.object({
+  ffmpegBaseCredits: z.coerce.number().int().min(0).optional(),
+  aiDefaultBaseCredits: z.coerce.number().int().min(0).optional(),
+  extraSecondCredits: z.coerce.number().int().min(0).optional(),
+  modelCredits: z.record(z.string(), z.coerce.number().int().min(0)).optional()
+});
 
 function adminUser(user) {
   return {
@@ -212,6 +220,35 @@ adminRoutes.get('/cost-summary', async (req, res, next) => {
   try {
     const summary = await getCostSummary();
     res.json({ summary });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.get('/video-costs', async (req, res, next) => {
+  try {
+    const costs = await getVideoCostSettings();
+    res.json({ costs });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.patch('/video-costs', async (req, res, next) => {
+  try {
+    const data = videoCostSchema.parse(req.body);
+    const costs = await updateVideoCostSettings(data);
+
+    await writeAuditLog({
+      actor: req.user._id,
+      action: 'admin.update_video_costs',
+      resourceType: 'Setting',
+      resourceId: 'video_costs',
+      req,
+      metadata: data
+    });
+
+    res.json({ costs });
   } catch (error) {
     next(error);
   }

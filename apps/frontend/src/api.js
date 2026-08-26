@@ -127,6 +127,17 @@ export function getAdminCostSummary() {
   return apiFetch('/admin/cost-summary');
 }
 
+export function getAdminVideoCosts() {
+  return apiFetch('/admin/video-costs');
+}
+
+export function updateAdminVideoCosts(payload) {
+  return apiFetch('/admin/video-costs', {
+    method: 'PATCH',
+    body: JSON.stringify(payload)
+  });
+}
+
 export function getAdminCoupons() {
   return apiFetch('/admin/coupons');
 }

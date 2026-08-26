@@ -33,6 +33,7 @@ import {
   getAdminUsers,
   getAdminPromotions,
   getAdminProviderHealth,
+  getAdminVideoCosts,
   getActivePromotions,
   getAccountExportUrl,
   getProjectEventsUrl,
@@ -49,6 +50,7 @@ import {
   reportProject,
   saveSession,
   updateAdminUser,
+  updateAdminVideoCosts,
   updateProfile,
   updateNotificationPreferences
 } from './api.js';
@@ -508,6 +510,7 @@ function AdminPanel() {
   const [overview, setOverview] = useState(null);
   const [health, setHealth] = useState([]);
   const [costSummary, setCostSummary] = useState(null);
+  const [costSettings, setCostSettings] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [promotions, setPromotions] = useState([]);
   const [reports, setReports] = useState([]);
@@ -516,6 +519,7 @@ function AdminPanel() {
   const [userSearch, setUserSearch] = useState('');
   const [userForm, setUserForm] = useState({ name: '', role: 'user', status: 'active' });
   const [creditForm, setCreditForm] = useState({ amount: '10', reason: 'Admin adjustment' });
+  const [costForm, setCostForm] = useState({ ffmpegBaseCredits: '5', aiDefaultBaseCredits: '20', extraSecondCredits: '5' });
   const [couponForm, setCouponForm] = useState({ code: 'SALE20', type: 'percent', value: '20', maxUses: '100' });
   const [promotionForm, setPromotionForm] = useState(() => ({
     name: 'New user bonus',
@@ -533,14 +537,15 @@ function AdminPanel() {
     setError('');
 
     try {
-      const [overviewResult, healthResult, costResult, couponResult, reportResult, usersResult, promotionResult] = await Promise.all([
+      const [overviewResult, healthResult, costResult, couponResult, reportResult, usersResult, promotionResult, costSettingsResult] = await Promise.all([
         getAdminOverview(),
         getAdminProviderHealth(),
         getAdminCostSummary(),
         getAdminCoupons(),
         getAdminContentReports(),
         getAdminUsers(userSearch),
-        getAdminPromotions()
+        getAdminPromotions(),
+        getAdminVideoCosts()
       ]);
       setOverview(overviewResult.overview);
       setHealth(healthResult.health || []);
@@ -549,6 +554,12 @@ function AdminPanel() {
       setReports(reportResult.reports || []);
       setUsers(usersResult.users || []);
       setPromotions(promotionResult.promotions || []);
+      setCostSettings(costSettingsResult.costs);
+      setCostForm({
+        ffmpegBaseCredits: String(costSettingsResult.costs.ffmpegBaseCredits),
+        aiDefaultBaseCredits: String(costSettingsResult.costs.aiDefaultBaseCredits),
+        extraSecondCredits: String(costSettingsResult.costs.extraSecondCredits)
+      });
     } catch (err) {
       setError(err.message);
     }
@@ -666,6 +677,24 @@ function AdminPanel() {
       await handleSelectUser(result.user.id);
       setUsers((items) => items.map((item) => (item.id === result.user.id ? result.user : item)));
       setMessage('Credit adjusted.');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleUpdateCosts(event) {
+    event.preventDefault();
+    setMessage('');
+    setError('');
+
+    try {
+      const result = await updateAdminVideoCosts({
+        ffmpegBaseCredits: Number(costForm.ffmpegBaseCredits),
+        aiDefaultBaseCredits: Number(costForm.aiDefaultBaseCredits),
+        extraSecondCredits: Number(costForm.extraSecondCredits)
+      });
+      setCostSettings(result.costs);
+      setMessage('Video costs updated.');
     } catch (err) {
       setError(err.message);
     }
@@ -812,6 +841,49 @@ function AdminPanel() {
               <strong>{costSummary.totals.credits || 0}</strong>
             </article>
           </div>
+        </>
+      )}
+
+      {costSettings && (
+        <>
+          <div className="section-title compact">
+            <Sparkles size={20} />
+            <h3>Video cost settings</h3>
+          </div>
+          <form className="admin-form" onSubmit={handleUpdateCosts}>
+            <div className="form-grid">
+              <label>
+                FFmpeg
+                <input
+                  min="0"
+                  type="number"
+                  value={costForm.ffmpegBaseCredits}
+                  onChange={(event) => setCostForm({ ...costForm, ffmpegBaseCredits: event.target.value })}
+                />
+              </label>
+              <label>
+                AI default
+                <input
+                  min="0"
+                  type="number"
+                  value={costForm.aiDefaultBaseCredits}
+                  onChange={(event) => setCostForm({ ...costForm, aiDefaultBaseCredits: event.target.value })}
+                />
+              </label>
+            </div>
+            <label>
+              Extra second
+              <input
+                min="0"
+                type="number"
+                value={costForm.extraSecondCredits}
+                onChange={(event) => setCostForm({ ...costForm, extraSecondCredits: event.target.value })}
+              />
+            </label>
+            <button className="ghost-button" type="submit">
+              Save costs
+            </button>
+          </form>
         </>
       )}
 

@@ -7,7 +7,8 @@ import { imageUpload } from '../middleware/upload.js';
 import { env } from '../config/env.js';
 import { cancelQueuedGeneration, enqueueGeneration } from '../services/queueService.js';
 import { releaseReservedCredits, reserveCredits } from '../services/creditService.js';
-import { estimateProviderCost, getProvider } from '../services/providers/providerRouter.js';
+import { getProvider } from '../services/providers/providerRouter.js';
+import { estimateVideoCost } from '../services/settingService.js';
 import { notifyUser } from '../services/notificationService.js';
 import { moderateProjectInput } from '../services/moderationService.js';
 import { writeAuditLog } from '../services/auditService.js';
@@ -56,9 +57,12 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
       return res.status(400).json({ message: 'AI provider chua duoc cau hinh API key' });
     }
 
-    const providerCost = data.generationMode === 'ai'
-      ? estimateProviderCost({ provider: providerName, model: modelName, duration: data.duration })
-      : 5;
+    const providerCost = await estimateVideoCost({
+      generationMode: data.generationMode,
+      provider: providerName,
+      model: modelName,
+      duration: data.duration
+    });
 
     if (!providerCost) {
       return res.status(400).json({ message: 'AI model khong hop le' });
