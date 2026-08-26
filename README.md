@@ -1,6 +1,6 @@
 # Image To Videos
 
-Website chuyen anh thanh video ngan theo SRS v2.0. Ban hien tai la Commercial MVP: co dang ky, dang nhap, credit wallet, pricing/payment mock, notification, upload anh, tao video MP4 bang FFmpeg va hien thi video ket qua tren trinh duyet.
+Website chuyen anh thanh video ngan theo SRS v2.0. Ban hien tai la Commercial MVP: co dang ky, dang nhap, credit wallet, pricing/payment mock, notification, upload anh, tao video MP4 bang FFmpeg/AI va hien thi video ket qua tren trinh duyet.
 
 ## Kien truc
 
@@ -109,7 +109,7 @@ Replicate `minimax/video-01` duoc uu tien cho demo AI neu token kha dung. Fal va
 ## Luong chuc nang
 
 1. Nguoi dung dang ky hoac dang nhap.
-2. He thong cap san 20 credits cho tai khoan moi.
+2. Tai khoan moi co 0 credit neu khong co promotion hop le.
 3. Nguoi dung upload anh JPG, PNG hoac WEBP toi da 5MB.
 4. Backend reserve credits va tao generation job.
 5. Worker tao video bang FFmpeg hoac AI provider.
@@ -149,6 +149,8 @@ Replicate `minimax/video-01` duoc uu tien cho demo AI neu token kha dung. Fal va
 Khi deploy backend, can cau hinh day du cac bien trong `apps/backend/.env.example`. Khong dua file `.env` that len GitHub.
 
 Huong dan chi tiet nam trong `docs/DEPLOYMENT.md`.
+
+Tai lieu SRS v2.0 theo de thi nam trong `docs/SRS_v2.0.md`.
 
 Huong dan cau hinh AI provider fal.ai nam trong `docs/FAL_AI.md`. Replicate dung bien `REPLICATE_API_TOKEN`.
 
