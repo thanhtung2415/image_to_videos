@@ -20,14 +20,13 @@ const creditTransactionSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['purchase', 'reserve', 'capture', 'release', 'refund'],
+      enum: ['purchase', 'reserve', 'capture', 'release', 'refund', 'manual_adjustment', 'promotion_bonus'],
       required: true,
       index: true
     },
     amount: {
       type: Number,
-      required: true,
-      min: 0
+      required: true
     },
     balanceAfter: {
       availableCredit: Number,
@@ -49,4 +48,3 @@ const creditTransactionSchema = new mongoose.Schema(
 );
 
 export const CreditTransaction = mongoose.model('CreditTransaction', creditTransactionSchema);
-

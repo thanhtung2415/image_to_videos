@@ -16,6 +16,7 @@ import {
   Upload
 } from 'lucide-react';
 import {
+  adjustAdminUserCredits,
   clearSession,
   cancelProject,
   changePassword,
@@ -27,6 +28,8 @@ import {
   getAdminContentReports,
   getAdminCoupons,
   getAdminOverview,
+  getAdminUser,
+  getAdminUsers,
   getAdminProviderHealth,
   getAccountExportUrl,
   getProjectEventsUrl,
@@ -41,6 +44,7 @@ import {
   register,
   reportProject,
   saveSession,
+  updateAdminUser,
   updateProfile,
   updateNotificationPreferences
 } from './api.js';
@@ -462,6 +466,11 @@ function AdminPanel() {
   const [costSummary, setCostSummary] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [reports, setReports] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userSearch, setUserSearch] = useState('');
+  const [userForm, setUserForm] = useState({ name: '', role: 'user', status: 'active' });
+  const [creditForm, setCreditForm] = useState({ amount: '10', reason: 'Admin adjustment' });
   const [couponForm, setCouponForm] = useState({ code: 'SALE20', type: 'percent', value: '20', maxUses: '100' });
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -470,18 +479,20 @@ function AdminPanel() {
     setError('');
 
     try {
-      const [overviewResult, healthResult, costResult, couponResult, reportResult] = await Promise.all([
+      const [overviewResult, healthResult, costResult, couponResult, reportResult, usersResult] = await Promise.all([
         getAdminOverview(),
         getAdminProviderHealth(),
         getAdminCostSummary(),
         getAdminCoupons(),
-        getAdminContentReports()
+        getAdminContentReports(),
+        getAdminUsers(userSearch)
       ]);
       setOverview(overviewResult.overview);
       setHealth(healthResult.health || []);
       setCostSummary(costResult.summary);
       setCoupons(couponResult.coupons || []);
       setReports(reportResult.reports || []);
+      setUsers(usersResult.users || []);
     } catch (err) {
       setError(err.message);
     }
@@ -510,6 +521,78 @@ function AdminPanel() {
     }
   }
 
+  async function handleSearchUsers(event) {
+    event.preventDefault();
+    setError('');
+
+    try {
+      const result = await getAdminUsers(userSearch);
+      setUsers(result.users || []);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleSelectUser(userId) {
+    setError('');
+    setMessage('');
+
+    try {
+      const result = await getAdminUser(userId);
+      setSelectedUser(result);
+      setUserForm({
+        name: result.user.name,
+        role: result.user.role,
+        status: result.user.status
+      });
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleUpdateUser(event) {
+    event.preventDefault();
+
+    if (!selectedUser) {
+      return;
+    }
+
+    setMessage('');
+    setError('');
+
+    try {
+      const result = await updateAdminUser(selectedUser.user.id, userForm);
+      setSelectedUser({ ...selectedUser, user: result.user });
+      setUsers((items) => items.map((item) => (item.id === result.user.id ? result.user : item)));
+      setMessage('User updated.');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleAdjustCredit(event) {
+    event.preventDefault();
+
+    if (!selectedUser) {
+      return;
+    }
+
+    setMessage('');
+    setError('');
+
+    try {
+      const result = await adjustAdminUserCredits(selectedUser.user.id, {
+        amount: Number(creditForm.amount),
+        reason: creditForm.reason
+      });
+      await handleSelectUser(result.user.id);
+      setUsers((items) => items.map((item) => (item.id === result.user.id ? result.user : item)));
+      setMessage('Credit adjusted.');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
     <section className="panel admin-panel">
       <div className="section-title">
@@ -528,6 +611,93 @@ function AdminPanel() {
               <strong>{value}</strong>
             </article>
           ))}
+        </div>
+      )}
+
+      <div className="section-title compact">
+        <Shield size={20} />
+        <h3>User management</h3>
+      </div>
+
+      <form className="admin-form" onSubmit={handleSearchUsers}>
+        <input
+          value={userSearch}
+          onChange={(event) => setUserSearch(event.target.value)}
+          placeholder="Search name or email"
+        />
+        <button className="ghost-button" type="submit">
+          Search users
+        </button>
+      </form>
+
+      <div className="compact-list">
+        {users.slice(0, 6).map((item) => (
+          <article key={item.id}>
+            <strong>{item.name}</strong>
+            <span>{item.email} - {item.role} - {item.status} - {item.creditWallet?.availableCredit ?? 0} credits</span>
+            <button className="ghost-button small-action" type="button" onClick={() => handleSelectUser(item.id)}>
+              Manage
+            </button>
+          </article>
+        ))}
+      </div>
+
+      {selectedUser && (
+        <div className="admin-user-box">
+          <form className="admin-form" onSubmit={handleUpdateUser}>
+            <label>
+              Name
+              <input value={userForm.name} onChange={(event) => setUserForm({ ...userForm, name: event.target.value })} />
+            </label>
+            <div className="form-grid">
+              <label>
+                Role
+                <select value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value })}>
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
+              </label>
+              <label>
+                Status
+                <select value={userForm.status} onChange={(event) => setUserForm({ ...userForm, status: event.target.value })}>
+                  <option value="active">active</option>
+                  <option value="locked">locked</option>
+                </select>
+              </label>
+            </div>
+            <button className="ghost-button" type="submit">
+              Update user
+            </button>
+          </form>
+
+          <form className="admin-form" onSubmit={handleAdjustCredit}>
+            <div className="form-grid">
+              <label>
+                Credit amount
+                <input
+                  type="number"
+                  value={creditForm.amount}
+                  onChange={(event) => setCreditForm({ ...creditForm, amount: event.target.value })}
+                />
+              </label>
+              <label>
+                Reason
+                <input value={creditForm.reason} onChange={(event) => setCreditForm({ ...creditForm, reason: event.target.value })} />
+              </label>
+            </div>
+            <button className="ghost-button" type="submit">
+              Adjust credit
+            </button>
+          </form>
+
+          <div className="compact-list">
+            {(selectedUser.transactions || []).slice(0, 5).map((transaction) => (
+              <article key={transaction._id}>
+                <strong>{transaction.type}: {transaction.amount}</strong>
+                <span>{transaction.note || new Date(transaction.createdAt).toLocaleString('vi-VN')}</span>
+              </article>
+            ))}
+          </div>
         </div>
       )}
 

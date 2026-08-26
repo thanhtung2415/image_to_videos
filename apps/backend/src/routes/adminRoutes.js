@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AuditLog } from '../models/AuditLog.js';
 import { ContentReport } from '../models/ContentReport.js';
 import { Coupon } from '../models/Coupon.js';
+import { CreditTransaction } from '../models/CreditTransaction.js';
 import { GenerationJob } from '../models/GenerationJob.js';
 import { Payment } from '../models/Payment.js';
 import { User } from '../models/User.js';
@@ -10,7 +11,9 @@ import { VideoProject } from '../models/VideoProject.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
 import { getCostSummary } from '../services/costService.js';
+import { adjustCredits } from '../services/creditService.js';
 import { listProviderHealth } from '../services/providerHealthService.js';
+import { writeAuditLog } from '../services/auditService.js';
 
 export const adminRoutes = express.Router();
 
@@ -23,6 +26,29 @@ const couponSchema = z.object({
   maxUses: z.coerce.number().min(0).default(0),
   expiresAt: z.string().datetime().optional()
 });
+
+const userUpdateSchema = z.object({
+  name: z.string().min(2).max(80).optional(),
+  role: z.enum(['user', 'admin']).optional(),
+  status: z.enum(['active', 'locked']).optional()
+});
+
+const creditAdjustmentSchema = z.object({
+  amount: z.coerce.number().int().refine((value) => value !== 0, 'Amount must not be zero'),
+  reason: z.string().max(200).default('')
+});
+
+function adminUser(user) {
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    status: user.status,
+    creditWallet: user.creditWallet,
+    createdAt: user.createdAt
+  };
+}
 
 adminRoutes.get('/overview', async (req, res, next) => {
   try {
@@ -43,6 +69,106 @@ adminRoutes.get('/overview', async (req, res, next) => {
         openReports: reports
       }
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.get('/users', async (req, res, next) => {
+  try {
+    const search = String(req.query.search || '').trim();
+    const filter = search
+      ? {
+          status: { $ne: 'deleted' },
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } }
+          ]
+        }
+      : { status: { $ne: 'deleted' } };
+
+    const users = await User.find(filter)
+      .select('-passwordHash -emailVerificationTokenHash -passwordResetTokenHash')
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.json({ users: users.map(adminUser) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.get('/users/:id', async (req, res, next) => {
+  try {
+    const [user, transactions, projects] = await Promise.all([
+      User.findById(req.params.id).select('-passwordHash -emailVerificationTokenHash -passwordResetTokenHash'),
+      CreditTransaction.find({ user: req.params.id }).sort({ createdAt: -1 }).limit(20),
+      VideoProject.find({ user: req.params.id }).sort({ createdAt: -1 }).limit(10)
+    ]);
+
+    if (!user || user.status === 'deleted') {
+      return res.status(404).json({ message: 'Khong tim thay user' });
+    }
+
+    res.json({ user: adminUser(user), transactions, projects });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.patch('/users/:id', async (req, res, next) => {
+  try {
+    const data = userUpdateSchema.parse(req.body);
+    const user = await User.findOneAndUpdate(
+      { _id: req.params.id, status: { $ne: 'deleted' } },
+      data,
+      { new: true, runValidators: true }
+    ).select('-passwordHash -emailVerificationTokenHash -passwordResetTokenHash');
+
+    if (!user) {
+      return res.status(404).json({ message: 'Khong tim thay user' });
+    }
+
+    await writeAuditLog({
+      actor: req.user._id,
+      action: 'admin.update_user',
+      resourceType: 'User',
+      resourceId: user._id.toString(),
+      req,
+      metadata: data
+    });
+
+    res.json({ user: adminUser(user) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.post('/users/:id/credits', async (req, res, next) => {
+  try {
+    const data = creditAdjustmentSchema.parse(req.body);
+    const result = await adjustCredits({
+      userId: req.params.id,
+      adminId: req.user._id,
+      delta: data.amount,
+      reason: data.reason,
+      idempotencyKey: `admin-credit:${req.user._id}:${req.params.id}:${Date.now()}`
+    });
+
+    if (!result.ok) {
+      return res.status(400).json({ message: result.message });
+    }
+
+    await writeAuditLog({
+      actor: req.user._id,
+      action: 'admin.adjust_credit',
+      resourceType: 'User',
+      resourceId: req.params.id,
+      req,
+      metadata: data
+    });
+
+    res.json({ user: adminUser(result.user) });
   } catch (error) {
     next(error);
   }

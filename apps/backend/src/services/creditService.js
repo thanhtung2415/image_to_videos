@@ -90,6 +90,46 @@ export async function purchaseCredits({ userId, paymentId, amount, idempotencyKe
   return user;
 }
 
+export async function adjustCredits({ userId, adminId, delta, reason, idempotencyKey }) {
+  const query = delta < 0
+    ? {
+        _id: userId,
+        'creditWallet.availableCredit': { $gte: Math.abs(delta) }
+      }
+    : { _id: userId };
+
+  const inc = {
+    'creditWallet.availableCredit': delta
+  };
+
+  if (delta > 0) {
+    inc['creditWallet.lifetimePurchased'] = delta;
+  }
+
+  const user = await User.findOneAndUpdate(
+    query,
+    { $inc: inc },
+    { new: true }
+  );
+
+  if (!user) {
+    return {
+      ok: false,
+      message: 'Khong the tru credit vuot qua so du hien co'
+    };
+  }
+
+  await createTransaction({
+    user,
+    type: 'manual_adjustment',
+    amount: delta,
+    idempotencyKey,
+    note: reason || `Manual credit adjustment by admin ${adminId}`
+  });
+
+  return { ok: true, user };
+}
+
 export async function refundPurchasedCredits({ userId, paymentId, amount, idempotencyKey }) {
   const user = await User.findOneAndUpdate(
     {

@@ -100,6 +100,29 @@ export function getAdminProviderHealth() {
   return apiFetch('/admin/provider-health');
 }
 
+export function getAdminUsers(search = '') {
+  const query = search ? `?search=${encodeURIComponent(search)}` : '';
+  return apiFetch(`/admin/users${query}`);
+}
+
+export function getAdminUser(id) {
+  return apiFetch(`/admin/users/${id}`);
+}
+
+export function updateAdminUser(id, payload) {
+  return apiFetch(`/admin/users/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function adjustAdminUserCredits(id, payload) {
+  return apiFetch(`/admin/users/${id}/credits`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
 export function getAdminCostSummary() {
   return apiFetch('/admin/cost-summary');
 }
