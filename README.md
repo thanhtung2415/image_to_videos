@@ -150,8 +150,6 @@ Khi deploy backend, can cau hinh day du cac bien trong `apps/backend/.env.exampl
 
 Huong dan chi tiet nam trong `docs/DEPLOYMENT.md`.
 
-Tai lieu SRS v2.0 theo de thi nam trong `docs/SRS_v2.0.md`.
-
 Huong dan cau hinh AI provider fal.ai nam trong `docs/FAL_AI.md`. Replicate dung bien `REPLICATE_API_TOKEN`.
 
 ## Con can lam de production that
