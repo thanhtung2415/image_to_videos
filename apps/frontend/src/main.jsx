@@ -37,7 +37,7 @@ import {
   getAdminUsers,
   getAdminPromotions,
   getAdminProviderHealth,
-  getAdminReportSummary,
+  getAdminReportOverview,
   getAdminVideos,
   getAdminVideoCosts,
   getActivePromotions,
@@ -380,7 +380,7 @@ function PricingPanel({ onPurchased, onWalletChanged }) {
         couponCode,
         idempotencyKey: `${planCode}-${crypto.randomUUID()}`
       });
-      onPurchased(result.payment);
+      await onPurchased(result.payment);
       const transactionResult = await getCreditTransactions();
       setTransactions(transactionResult.transactions || []);
       setMessage('Credit da duoc cong vao vi.');
@@ -448,7 +448,7 @@ function PricingPanel({ onPurchased, onWalletChanged }) {
           {promotions.slice(0, 3).map((promotion) => (
             <article key={promotion._id}>
               <strong>{promotion.code}</strong>
-              <span>{promotion.creditBonus} credits - until {new Date(promotion.endsAt).toLocaleDateString('vi-VN')}</span>
+              <span>{promotion.creditBonus} credits - until {new Date(promotion.endsAt || promotion.endAt).toLocaleDateString('vi-VN')}</span>
             </article>
           ))}
         </div>
@@ -568,6 +568,15 @@ function AdminPanel() {
   const [adminVideos, setAdminVideos] = useState([]);
   const [videoStatusFilter, setVideoStatusFilter] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [reportRange, setReportRange] = useState(() => {
+    const to = new Date();
+    const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    return {
+      from: from.toISOString().slice(0, 10),
+      to: to.toISOString().slice(0, 10)
+    };
+  });
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userSearch, setUserSearch] = useState('');
@@ -615,7 +624,7 @@ function AdminPanel() {
         getAdminUsers(userSearch),
         getAdminPromotions(),
         getAdminVideoCosts(),
-        getAdminReportSummary(30),
+        getAdminReportOverview(reportRange),
         getAdminVideos(videoStatusFilter),
         getAdminPricingPlans(),
         getAdminPayments(paymentStatusFilter),
@@ -743,6 +752,19 @@ function AdminPanel() {
     try {
       const result = await getAdminUsers(userSearch);
       setUsers(result.users || []);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleReportRange(event) {
+    event.preventDefault();
+    setError('');
+
+    try {
+      const result = await getAdminReportOverview(reportRange);
+      setReportSummary(result);
+      setMessage('Reports updated.');
     } catch (err) {
       setError(err.message);
     }
@@ -908,41 +930,76 @@ function AdminPanel() {
         <>
           <div className="section-title compact">
             <Activity size={20} />
-            <h3>30 day report</h3>
+            <h3>Reports</h3>
           </div>
+          <form className="admin-form report-filter" onSubmit={handleReportRange}>
+            <div className="form-grid">
+              <label>
+                From
+                <input
+                  type="date"
+                  value={reportRange.from}
+                  onChange={(event) => setReportRange({ ...reportRange, from: event.target.value })}
+                />
+              </label>
+              <label>
+                To
+                <input
+                  type="date"
+                  value={reportRange.to}
+                  onChange={(event) => setReportRange({ ...reportRange, to: event.target.value })}
+                />
+              </label>
+            </div>
+            <button className="ghost-button" type="submit">
+              Update reports
+            </button>
+          </form>
           <div className="metric-grid">
             <article className="metric-card">
-              <span>new users</span>
-              <strong>{reportSummary.newUsers}</strong>
+              <span>total users</span>
+              <strong>{reportSummary.users.total}</strong>
             </article>
             <article className="metric-card">
-              <span>successful videos</span>
-              <strong>{reportSummary.successfulVideos}</strong>
+              <span>new users</span>
+              <strong>{reportSummary.users.new}</strong>
+            </article>
+            <article className="metric-card">
+              <span>completed videos</span>
+              <strong>{reportSummary.videos.completed}</strong>
             </article>
             <article className="metric-card">
               <span>failed videos</span>
-              <strong>{reportSummary.failedVideos}</strong>
+              <strong>{reportSummary.videos.failed}</strong>
+            </article>
+            <article className="metric-card">
+              <span>processing videos</span>
+              <strong>{reportSummary.videos.processing}</strong>
             </article>
             <article className="metric-card">
               <span>revenue</span>
-              <strong>{reportSummary.creditRevenue.toLocaleString('vi-VN')}</strong>
+              <strong>{reportSummary.payments.revenue.toLocaleString('vi-VN')}</strong>
             </article>
             <article className="metric-card">
-              <span>credits issued</span>
-              <strong>{reportSummary.creditsIssued}</strong>
+              <span>credit granted</span>
+              <strong>{reportSummary.credits.granted}</strong>
             </article>
             <article className="metric-card">
-              <span>credits used</span>
-              <strong>{reportSummary.creditsUsed}</strong>
+              <span>credit used</span>
+              <strong>{reportSummary.credits.used}</strong>
             </article>
-          </div>
-          <div className="compact-list">
-            {(reportSummary.promotionStats || []).slice(0, 3).map((promotion) => (
-              <article key={promotion._id}>
-                <strong>{promotion._id}</strong>
-                <span>{promotion.registrations} registrations - {promotion.credits} credits</span>
-              </article>
-            ))}
+            <article className="metric-card">
+              <span>credit refunded</span>
+              <strong>{reportSummary.credits.refunded}</strong>
+            </article>
+            <article className="metric-card">
+              <span>promotion registrations</span>
+              <strong>{reportSummary.promotions.registrations}</strong>
+            </article>
+            <article className="metric-card">
+              <span>promotion credits</span>
+              <strong>{reportSummary.promotions.creditsGranted}</strong>
+            </article>
           </div>
         </>
       )}
@@ -1761,15 +1818,8 @@ function Dashboard({ user, onLogout }) {
     }));
   }
 
-  function handlePurchased(payment) {
-    updateCurrentUser((value) => ({
-      ...value,
-      creditWallet: {
-        ...value.creditWallet,
-        availableCredit: value.creditWallet.availableCredit + payment.credits,
-        lifetimePurchased: value.creditWallet.lifetimePurchased + payment.credits
-      }
-    }));
+  async function handlePurchased() {
+    await refreshWallet();
   }
 
   function handleWalletChanged(wallet) {

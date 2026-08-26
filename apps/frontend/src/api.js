@@ -129,7 +129,7 @@ export function updateAdminUser(id, payload) {
 }
 
 export function adjustAdminUserCredits(id, payload) {
-  return apiFetch(`/admin/users/${id}/credits`, {
+  return apiFetch(`/admin/users/${id}/credits/adjust`, {
     method: 'POST',
     body: JSON.stringify(payload)
   });
@@ -141,6 +141,20 @@ export function getAdminCostSummary() {
 
 export function getAdminReportSummary(days = 30) {
   return apiFetch(`/admin/reports/summary?days=${encodeURIComponent(days)}`);
+}
+
+export function getAdminReportOverview({ from = '', to = '' } = {}) {
+  const query = new URLSearchParams();
+
+  if (from) {
+    query.set('from', from);
+  }
+
+  if (to) {
+    query.set('to', to);
+  }
+
+  return apiFetch(`/admin/reports/overview${query.toString() ? `?${query}` : ''}`);
 }
 
 export function getAdminVideoCosts() {
@@ -200,18 +214,18 @@ export function getAdminVideos(status = '') {
 }
 
 export function getAdminPricingPlans() {
-  return apiFetch('/admin/pricing-plans');
+  return apiFetch('/admin/credit-packages');
 }
 
 export function createAdminPricingPlan(payload) {
-  return apiFetch('/admin/pricing-plans', {
+  return apiFetch('/admin/credit-packages', {
     method: 'POST',
     body: JSON.stringify(payload)
   });
 }
 
 export function updateAdminPricingPlan(id, payload) {
-  return apiFetch(`/admin/pricing-plans/${id}`, {
+  return apiFetch(`/admin/credit-packages/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(payload)
   });
@@ -278,14 +292,14 @@ export function deleteAccount() {
 }
 
 export function updateProfile(payload) {
-  return apiFetch('/account/profile', {
+  return apiFetch('/users/me', {
     method: 'PATCH',
     body: JSON.stringify(payload)
   });
 }
 
 export function changePassword(payload) {
-  return apiFetch('/account/password', {
+  return apiFetch('/users/me/password', {
     method: 'PATCH',
     body: JSON.stringify(payload)
   });
