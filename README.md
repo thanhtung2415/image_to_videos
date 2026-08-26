@@ -156,7 +156,7 @@ Huong dan chi tiet nam trong `docs/DEPLOYMENT.md`.
 
 Huong dan cau hinh AI provider fal.ai nam trong `docs/FAL_AI.md`. Replicate dung bien `REPLICATE_API_TOKEN`.
 
-Mo ta API nam trong `docs/API.md`. Mo ta database nam trong `docs/DATABASE.md`.
+Mo ta API nam trong `docs/API.md`. Mo ta database nam trong `docs/DATABASE.md`. Kien truc tong quan nam trong `docs/ARCHITECTURE.md`. Huong dan demo nam trong `docs/USER_GUIDE.md`.
 
 ## Con can lam de production that
 
