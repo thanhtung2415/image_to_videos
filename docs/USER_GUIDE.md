@@ -2,12 +2,12 @@
 
 ## Demo accounts
 
-Chay `npm run seed:demo` de tao tai khoan mau.
+Chay `npm run seed` de tao tai khoan mau.
 
 | Role | Email | Password |
 | --- | --- | --- |
-| Admin | admin@example.com | 123456 |
-| User | user@example.com | 123456 |
+| Admin | admin@example.com | Admin123! |
+| User | user@example.com | User123! |
 
 ## User flow
 
@@ -25,7 +25,7 @@ Chay `npm run seed:demo` de tao tai khoan mau.
 ## Admin flow
 
 1. Dang nhap bang tai khoan admin.
-2. Xem `30 day report` de theo doi user, video, credit, revenue va promotion.
+2. Xem `Reports` va chon From/To de theo doi user, video, credit, revenue va promotion theo thoi gian.
 3. Dung `User management` de tim user, doi role/status hoac cong/tru credit thu cong.
 4. Dung `Credit package management` de tao/bat/tat goi credit.
 5. Dung `Payment management` de xem payment va refund payment mock.

@@ -30,15 +30,15 @@ Database chinh la MongoDB. Khi demo local co the dung MongoDB local, khi deploy 
 Chay lenh sau de tao user demo, goi credit, coupon va promotion:
 
 ```bash
-npm run seed:demo
+npm run seed
 ```
 
 Tai khoan mau:
 
 | Role | Email | Password |
 | --- | --- | --- |
-| Admin | admin@example.com | 123456 |
-| User | user@example.com | 123456 |
+| Admin | admin@example.com | Admin123! |
+| User | user@example.com | User123! |
 
 ## Backup
 
