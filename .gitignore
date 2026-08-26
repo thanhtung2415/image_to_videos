@@ -7,6 +7,7 @@ build/
 uploads/
 generated/
 backups/
+submissions/
 *.log
 .DS_Store
 Thumbs.db

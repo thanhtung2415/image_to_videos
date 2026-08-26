@@ -8,6 +8,14 @@
 - Deployment config: `render.yaml`, `apps/frontend/vercel.json`
 - Do not submit `.env`, `node_modules`, `dist`, `uploads`, `backups`
 
+Create clean source zip:
+
+```bash
+npm run zip:submission
+```
+
+The zip is created in `submissions` and contains only tracked source files from the latest commit.
+
 ## Database
 
 - Run seed data: `npm run seed:demo`
