@@ -234,7 +234,7 @@ function AuthPanel({ onSignedIn }) {
             />
           </label>
 
-          {error && <div className="alert">Email hoac mat khau khong dung</div>}
+          {error && <div className="alert">{error}</div>}
 
           <button className="primary-button" disabled={loading} type="submit">
             {loading ? <LoaderCircle className="spin" size={18} /> : <Play size={18} />}

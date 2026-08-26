@@ -86,6 +86,17 @@ app.use((error, req, res, next) => {
     return res.status(409).json({ message: 'Du lieu da ton tai' });
   }
 
+  if (
+    error.name === 'MongooseServerSelectionError' ||
+    error.name === 'MongoNetworkError' ||
+    error.message?.includes('Could not connect to any servers')
+  ) {
+    console.error(error);
+    return res.status(503).json({
+      message: 'Khong ket noi duoc MongoDB Atlas. Kiem tra IP Access List va khoi dong lai backend.'
+    });
+  }
+
   console.error(error);
   res.status(500).json({ message: 'Loi may chu' });
 });
