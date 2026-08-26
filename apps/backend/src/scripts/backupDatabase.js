@@ -13,6 +13,8 @@ import { NotificationPreference } from '../models/NotificationPreference.js';
 import { Payment } from '../models/Payment.js';
 import { PaymentEvent } from '../models/PaymentEvent.js';
 import { PricingPlan } from '../models/PricingPlan.js';
+import { Promotion } from '../models/Promotion.js';
+import { PromotionRegistration } from '../models/PromotionRegistration.js';
 import { ProviderHealth } from '../models/ProviderHealth.js';
 import { Refund } from '../models/Refund.js';
 import { User } from '../models/User.js';
@@ -34,6 +36,8 @@ const collections = {
   payments: Payment,
   payment_events: PaymentEvent,
   pricing_plans: PricingPlan,
+  promotions: Promotion,
+  promotion_registrations: PromotionRegistration,
   provider_health: ProviderHealth,
   refunds: Refund,
   users: User,
@@ -61,4 +65,3 @@ backupDatabase().catch((error) => {
   console.error(error);
   process.exit(1);
 });
-

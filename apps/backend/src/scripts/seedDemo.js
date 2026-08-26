@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { connectDatabase } from '../config/database.js';
 import { Coupon } from '../models/Coupon.js';
+import { Promotion } from '../models/Promotion.js';
 import { User } from '../models/User.js';
 import { seedDefaultPricingPlans } from '../services/pricingService.js';
 
@@ -56,6 +57,22 @@ async function seedDemo() {
     { upsert: true, new: true }
   );
 
+  await Promotion.findOneAndUpdate(
+    { code: 'WELCOME10' },
+    {
+      name: 'New user bonus',
+      code: 'WELCOME10',
+      description: 'Demo promotion for new users',
+      creditBonus: 10,
+      maxRegistrations: 100,
+      startsAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      endsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      status: 'active',
+      conditions: 'One registration per user'
+    },
+    { upsert: true, new: true }
+  );
+
   console.log('Demo data seeded');
   process.exit(0);
 }
@@ -64,4 +81,3 @@ seedDemo().catch((error) => {
   console.error(error);
   process.exit(1);
 });
-

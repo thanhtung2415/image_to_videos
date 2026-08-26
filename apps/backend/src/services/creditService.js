@@ -130,6 +130,33 @@ export async function adjustCredits({ userId, adminId, delta, reason, idempotenc
   return { ok: true, user };
 }
 
+export async function grantPromotionCredits({ userId, promotionId, code, amount, idempotencyKey }) {
+  const user = await User.findByIdAndUpdate(
+    userId,
+    {
+      $inc: {
+        'creditWallet.availableCredit': amount,
+        'creditWallet.lifetimePurchased': amount
+      }
+    },
+    { new: true }
+  );
+
+  if (!user) {
+    return null;
+  }
+
+  await createTransaction({
+    user,
+    type: 'promotion_bonus',
+    amount,
+    idempotencyKey,
+    note: `Promotion ${code} bonus from ${promotionId}`
+  });
+
+  return user;
+}
+
 export async function refundPurchasedCredits({ userId, paymentId, amount, idempotencyKey }) {
   const user = await User.findOneAndUpdate(
     {

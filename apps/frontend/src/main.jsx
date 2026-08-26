@@ -21,6 +21,7 @@ import {
   cancelProject,
   changePassword,
   createAdminCoupon,
+  createAdminPromotion,
   createCheckout,
   createProject,
   deleteAccount,
@@ -30,7 +31,9 @@ import {
   getAdminOverview,
   getAdminUser,
   getAdminUsers,
+  getAdminPromotions,
   getAdminProviderHealth,
+  getActivePromotions,
   getAccountExportUrl,
   getProjectEventsUrl,
   getProject,
@@ -42,6 +45,7 @@ import {
   getStoredUser,
   login,
   register,
+  registerPromotion,
   reportProject,
   saveSession,
   updateAdminUser,
@@ -319,16 +323,21 @@ function ProjectForm({ onCreated }) {
   );
 }
 
-function PricingPanel({ onPurchased }) {
+function PricingPanel({ onPurchased, onWalletChanged }) {
   const [plans, setPlans] = useState([]);
+  const [promotions, setPromotions] = useState([]);
   const [loadingPlan, setLoadingPlan] = useState('');
   const [couponCode, setCouponCode] = useState('');
+  const [promotionCode, setPromotionCode] = useState('');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
     getPricingPlans()
       .then((result) => setPlans(result.plans || []))
       .catch(() => setPlans([]));
+    getActivePromotions()
+      .then((result) => setPromotions(result.promotions || []))
+      .catch(() => setPromotions([]));
   }, []);
 
   async function handleBuy(planCode) {
@@ -347,6 +356,20 @@ function PricingPanel({ onPurchased }) {
       setMessage(err.message);
     } finally {
       setLoadingPlan('');
+    }
+  }
+
+  async function handlePromotion(event) {
+    event.preventDefault();
+    setMessage('');
+
+    try {
+      const result = await registerPromotion({ code: promotionCode });
+      onWalletChanged(result.wallet);
+      setPromotionCode('');
+      setMessage(`Promotion accepted: +${result.promotion.creditBonus} credits.`);
+    } catch (err) {
+      setMessage(err.message);
     }
   }
 
@@ -375,6 +398,27 @@ function PricingPanel({ onPurchased }) {
           </article>
         ))}
       </div>
+
+      <form className="promotion-form" onSubmit={handlePromotion}>
+        <label>
+          Promotion
+          <input value={promotionCode} onChange={(event) => setPromotionCode(event.target.value)} placeholder="Promotion code" />
+        </label>
+        <button className="ghost-button" disabled={!promotionCode} type="submit">
+          Register promotion
+        </button>
+      </form>
+
+      {promotions.length > 0 && (
+        <div className="compact-list">
+          {promotions.slice(0, 3).map((promotion) => (
+            <article key={promotion._id}>
+              <strong>{promotion.code}</strong>
+              <span>{promotion.creditBonus} credits - until {new Date(promotion.endsAt).toLocaleDateString('vi-VN')}</span>
+            </article>
+          ))}
+        </div>
+      )}
 
       {message && <div className="muted-message">{message}</div>}
     </section>
@@ -465,6 +509,7 @@ function AdminPanel() {
   const [health, setHealth] = useState([]);
   const [costSummary, setCostSummary] = useState(null);
   const [coupons, setCoupons] = useState([]);
+  const [promotions, setPromotions] = useState([]);
   const [reports, setReports] = useState([]);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -472,6 +517,15 @@ function AdminPanel() {
   const [userForm, setUserForm] = useState({ name: '', role: 'user', status: 'active' });
   const [creditForm, setCreditForm] = useState({ amount: '10', reason: 'Admin adjustment' });
   const [couponForm, setCouponForm] = useState({ code: 'SALE20', type: 'percent', value: '20', maxUses: '100' });
+  const [promotionForm, setPromotionForm] = useState(() => ({
+    name: 'New user bonus',
+    code: 'WELCOME10',
+    creditBonus: '10',
+    maxRegistrations: '100',
+    startsAt: new Date().toISOString().slice(0, 16),
+    endsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+    conditions: 'One registration per user'
+  }));
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
@@ -479,13 +533,14 @@ function AdminPanel() {
     setError('');
 
     try {
-      const [overviewResult, healthResult, costResult, couponResult, reportResult, usersResult] = await Promise.all([
+      const [overviewResult, healthResult, costResult, couponResult, reportResult, usersResult, promotionResult] = await Promise.all([
         getAdminOverview(),
         getAdminProviderHealth(),
         getAdminCostSummary(),
         getAdminCoupons(),
         getAdminContentReports(),
-        getAdminUsers(userSearch)
+        getAdminUsers(userSearch),
+        getAdminPromotions()
       ]);
       setOverview(overviewResult.overview);
       setHealth(healthResult.health || []);
@@ -493,6 +548,7 @@ function AdminPanel() {
       setCoupons(couponResult.coupons || []);
       setReports(reportResult.reports || []);
       setUsers(usersResult.users || []);
+      setPromotions(promotionResult.promotions || []);
     } catch (err) {
       setError(err.message);
     }
@@ -515,6 +571,28 @@ function AdminPanel() {
         maxUses: Number(couponForm.maxUses)
       });
       setMessage('Coupon created.');
+      await loadAdminData();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleCreatePromotion(event) {
+    event.preventDefault();
+    setMessage('');
+    setError('');
+
+    try {
+      await createAdminPromotion({
+        name: promotionForm.name,
+        code: promotionForm.code,
+        creditBonus: Number(promotionForm.creditBonus),
+        maxRegistrations: Number(promotionForm.maxRegistrations),
+        startsAt: new Date(promotionForm.startsAt).toISOString(),
+        endsAt: new Date(promotionForm.endsAt).toISOString(),
+        conditions: promotionForm.conditions
+      });
+      setMessage('Promotion created.');
       await loadAdminData();
     } catch (err) {
       setError(err.message);
@@ -776,6 +854,69 @@ function AdminPanel() {
           <article key={coupon._id}>
             <strong>{coupon.code}</strong>
             <span>{coupon.type} {coupon.value} - used {coupon.usedCount}/{coupon.maxUses || '∞'}</span>
+          </article>
+        ))}
+      </div>
+
+      <div className="section-title compact">
+        <Sparkles size={20} />
+        <h3>Promotion management</h3>
+      </div>
+
+      <form className="admin-form" onSubmit={handleCreatePromotion}>
+        <input
+          value={promotionForm.name}
+          onChange={(event) => setPromotionForm({ ...promotionForm, name: event.target.value })}
+          placeholder="Promotion name"
+        />
+        <div className="form-grid">
+          <input
+            value={promotionForm.code}
+            onChange={(event) => setPromotionForm({ ...promotionForm, code: event.target.value })}
+            placeholder="Code"
+          />
+          <input
+            min="1"
+            type="number"
+            value={promotionForm.creditBonus}
+            onChange={(event) => setPromotionForm({ ...promotionForm, creditBonus: event.target.value })}
+            placeholder="Credit bonus"
+          />
+        </div>
+        <div className="form-grid">
+          <input
+            type="datetime-local"
+            value={promotionForm.startsAt}
+            onChange={(event) => setPromotionForm({ ...promotionForm, startsAt: event.target.value })}
+          />
+          <input
+            type="datetime-local"
+            value={promotionForm.endsAt}
+            onChange={(event) => setPromotionForm({ ...promotionForm, endsAt: event.target.value })}
+          />
+        </div>
+        <input
+          min="0"
+          type="number"
+          value={promotionForm.maxRegistrations}
+          onChange={(event) => setPromotionForm({ ...promotionForm, maxRegistrations: event.target.value })}
+          placeholder="Max registrations"
+        />
+        <input
+          value={promotionForm.conditions}
+          onChange={(event) => setPromotionForm({ ...promotionForm, conditions: event.target.value })}
+          placeholder="Conditions"
+        />
+        <button className="ghost-button" type="submit">
+          Create promotion
+        </button>
+      </form>
+
+      <div className="compact-list">
+        {promotions.slice(0, 5).map((promotion) => (
+          <article key={promotion._id}>
+            <strong>{promotion.code}</strong>
+            <span>{promotion.creditBonus} credits - {promotion.status} - used {promotion.registeredCount}/{promotion.maxRegistrations || '∞'}</span>
           </article>
         ))}
       </div>
@@ -1163,6 +1304,13 @@ function Dashboard({ user, onLogout }) {
     }));
   }
 
+  function handleWalletChanged(wallet) {
+    setCurrentUser((value) => ({
+      ...value,
+      creditWallet: wallet
+    }));
+  }
+
   return (
     <main className="dashboard">
       <header className="topbar">
@@ -1184,7 +1332,7 @@ function Dashboard({ user, onLogout }) {
       <div className="layout">
         <div className="sidebar-stack">
           <ProjectForm onCreated={handleCreated} />
-          <PricingPanel onPurchased={handlePurchased} />
+          <PricingPanel onPurchased={handlePurchased} onWalletChanged={handleWalletChanged} />
           <NotificationsPanel />
           <AccountPanel user={currentUser} onUpdated={setCurrentUser} onDeleted={onLogout} />
           {currentUser.role === 'admin' && <AdminPanel />}

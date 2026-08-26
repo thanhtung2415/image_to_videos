@@ -14,6 +14,7 @@ import { healthRoutes } from './routes/healthRoutes.js';
 import { paymentRoutes } from './routes/paymentRoutes.js';
 import { providerRoutes } from './routes/providerRoutes.js';
 import { projectRoutes } from './routes/projectRoutes.js';
+import { promotionRoutes } from './routes/promotionRoutes.js';
 import { pricingRoutes } from './routes/pricingRoutes.js';
 import { notificationRoutes } from './routes/notificationRoutes.js';
 import { apiRateLimit, authRateLimit, secureHeaders } from './middleware/security.js';
@@ -61,6 +62,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/providers', providerRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 app.use((error, req, res, next) => {
   if (error instanceof ZodError) {

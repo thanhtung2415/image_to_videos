@@ -6,6 +6,8 @@ import { Coupon } from '../models/Coupon.js';
 import { CreditTransaction } from '../models/CreditTransaction.js';
 import { GenerationJob } from '../models/GenerationJob.js';
 import { Payment } from '../models/Payment.js';
+import { Promotion } from '../models/Promotion.js';
+import { PromotionRegistration } from '../models/PromotionRegistration.js';
 import { User } from '../models/User.js';
 import { VideoProject } from '../models/VideoProject.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -37,6 +39,20 @@ const creditAdjustmentSchema = z.object({
   amount: z.coerce.number().int().refine((value) => value !== 0, 'Amount must not be zero'),
   reason: z.string().max(200).default('')
 });
+
+const promotionSchema = z.object({
+  name: z.string().min(3).max(120),
+  code: z.string().min(3).max(40),
+  description: z.string().max(300).default(''),
+  creditBonus: z.coerce.number().int().min(1),
+  maxRegistrations: z.coerce.number().int().min(0).default(0),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+  status: z.enum(['active', 'inactive']).default('active'),
+  conditions: z.string().max(300).default('One registration per user')
+});
+
+const promotionUpdateSchema = promotionSchema.partial();
 
 function adminUser(user) {
   return {
@@ -218,6 +234,82 @@ adminRoutes.get('/content-reports', async (req, res, next) => {
       .sort({ createdAt: -1 })
       .limit(100);
     res.json({ reports });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.get('/promotions', async (req, res, next) => {
+  try {
+    const promotions = await Promotion.find().sort({ createdAt: -1 }).limit(100);
+    const registrations = await PromotionRegistration.aggregate([
+      { $group: { _id: '$promotion', registrations: { $sum: 1 }, credits: { $sum: '$creditBonus' } } }
+    ]);
+    const stats = new Map(registrations.map((item) => [item._id.toString(), item]));
+
+    res.json({
+      promotions: promotions.map((promotion) => ({
+        ...promotion.toObject(),
+        stats: stats.get(promotion._id.toString()) || { registrations: 0, credits: 0 }
+      }))
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.post('/promotions', async (req, res, next) => {
+  try {
+    const data = promotionSchema.parse(req.body);
+    const promotion = await Promotion.create({
+      ...data,
+      code: data.code.toUpperCase(),
+      startsAt: new Date(data.startsAt),
+      endsAt: new Date(data.endsAt)
+    });
+
+    await writeAuditLog({
+      actor: req.user._id,
+      action: 'admin.create_promotion',
+      resourceType: 'Promotion',
+      resourceId: promotion._id.toString(),
+      req
+    });
+
+    res.status(201).json({ promotion });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.patch('/promotions/:id', async (req, res, next) => {
+  try {
+    const data = promotionUpdateSchema.parse(req.body);
+    const update = {
+      ...data,
+      ...(data.code ? { code: data.code.toUpperCase() } : {}),
+      ...(data.startsAt ? { startsAt: new Date(data.startsAt) } : {}),
+      ...(data.endsAt ? { endsAt: new Date(data.endsAt) } : {})
+    };
+    const promotion = await Promotion.findByIdAndUpdate(req.params.id, update, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!promotion) {
+      return res.status(404).json({ message: 'Khong tim thay promotion' });
+    }
+
+    await writeAuditLog({
+      actor: req.user._id,
+      action: 'admin.update_promotion',
+      resourceType: 'Promotion',
+      resourceId: promotion._id.toString(),
+      req,
+      metadata: update
+    });
+
+    res.json({ promotion });
   } catch (error) {
     next(error);
   }

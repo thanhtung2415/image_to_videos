@@ -138,12 +138,34 @@ export function createAdminCoupon(payload) {
   });
 }
 
+export function getAdminPromotions() {
+  return apiFetch('/admin/promotions');
+}
+
+export function createAdminPromotion(payload) {
+  return apiFetch('/admin/promotions', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
 export function getAdminContentReports() {
   return apiFetch('/admin/content-reports');
 }
 
 export function createCheckout(payload) {
   return apiFetch('/payments/checkout', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function getActivePromotions() {
+  return apiFetch('/promotions/active');
+}
+
+export function registerPromotion(payload) {
+  return apiFetch('/promotions/register', {
     method: 'POST',
     body: JSON.stringify(payload)
   });
