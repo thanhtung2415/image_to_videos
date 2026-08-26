@@ -21,6 +21,7 @@ import {
   cancelProject,
   changePassword,
   createAdminCoupon,
+  createAdminPricingPlan,
   createAdminPromotion,
   createCheckout,
   createProject,
@@ -29,6 +30,8 @@ import {
   getAdminContentReports,
   getAdminCoupons,
   getAdminOverview,
+  getAdminPayments,
+  getAdminPricingPlans,
   getAdminUser,
   getAdminUsers,
   getAdminPromotions,
@@ -53,6 +56,7 @@ import {
   reportProject,
   saveSession,
   updateAdminUser,
+  updateAdminPricingPlan,
   updateAdminVideoCosts,
   updateProfile,
   updateNotificationPreferences
@@ -539,16 +543,20 @@ function AdminPanel() {
   const [reportSummary, setReportSummary] = useState(null);
   const [costSettings, setCostSettings] = useState(null);
   const [coupons, setCoupons] = useState([]);
+  const [pricingPlans, setPricingPlans] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [promotions, setPromotions] = useState([]);
   const [reports, setReports] = useState([]);
   const [adminVideos, setAdminVideos] = useState([]);
   const [videoStatusFilter, setVideoStatusFilter] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userSearch, setUserSearch] = useState('');
   const [userForm, setUserForm] = useState({ name: '', role: 'user', status: 'active' });
   const [creditForm, setCreditForm] = useState({ amount: '10', reason: 'Admin adjustment' });
   const [costForm, setCostForm] = useState({ ffmpegBaseCredits: '5', aiDefaultBaseCredits: '20', extraSecondCredits: '5' });
+  const [planForm, setPlanForm] = useState({ code: 'starter', name: 'Starter', credits: '50', price: '25000', currency: 'VND', active: true, sortOrder: '5' });
   const [couponForm, setCouponForm] = useState({ code: 'SALE20', type: 'percent', value: '20', maxUses: '100' });
   const [promotionForm, setPromotionForm] = useState(() => ({
     name: 'New user bonus',
@@ -576,7 +584,9 @@ function AdminPanel() {
         promotionResult,
         costSettingsResult,
         reportSummaryResult,
-        adminVideosResult
+        adminVideosResult,
+        pricingPlansResult,
+        paymentsResult
       ] = await Promise.all([
         getAdminOverview(),
         getAdminProviderHealth(),
@@ -587,12 +597,16 @@ function AdminPanel() {
         getAdminPromotions(),
         getAdminVideoCosts(),
         getAdminReportSummary(30),
-        getAdminVideos(videoStatusFilter)
+        getAdminVideos(videoStatusFilter),
+        getAdminPricingPlans(),
+        getAdminPayments(paymentStatusFilter)
       ]);
       setOverview(overviewResult.overview);
       setHealth(healthResult.health || []);
       setCostSummary(costResult.summary);
       setCoupons(couponResult.coupons || []);
+      setPricingPlans(pricingPlansResult.plans || []);
+      setPayments(paymentsResult.payments || []);
       setReports(reportResult.reports || []);
       setUsers(usersResult.users || []);
       setPromotions(promotionResult.promotions || []);
@@ -649,6 +663,38 @@ function AdminPanel() {
       });
       setMessage('Promotion created.');
       await loadAdminData();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleCreatePlan(event) {
+    event.preventDefault();
+    setMessage('');
+    setError('');
+
+    try {
+      await createAdminPricingPlan({
+        ...planForm,
+        credits: Number(planForm.credits),
+        price: Number(planForm.price),
+        sortOrder: Number(planForm.sortOrder)
+      });
+      setMessage('Credit package created.');
+      await loadAdminData();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleTogglePlan(plan) {
+    setMessage('');
+    setError('');
+
+    try {
+      const result = await updateAdminPricingPlan(plan._id, { active: !plan.active });
+      setPricingPlans((items) => items.map((item) => (item._id === result.plan._id ? result.plan : item)));
+      setMessage('Credit package updated.');
     } catch (err) {
       setError(err.message);
     }
@@ -752,6 +798,19 @@ function AdminPanel() {
     try {
       const result = await getAdminVideos(nextStatus);
       setAdminVideos(result.videos || []);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handlePaymentFilter(event) {
+    const nextStatus = event.target.value;
+    setPaymentStatusFilter(nextStatus);
+    setError('');
+
+    try {
+      const result = await getAdminPayments(nextStatus);
+      setPayments(result.payments || []);
     } catch (err) {
       setError(err.message);
     }
@@ -921,6 +980,84 @@ function AdminPanel() {
               <span>{item.enabled ? 'enabled' : 'disabled'}</span>
             </div>
             <StatusBadge status={item.status} />
+          </article>
+        ))}
+      </div>
+
+      <div className="section-title compact">
+        <Sparkles size={20} />
+        <h3>Credit package management</h3>
+      </div>
+
+      <form className="admin-form" onSubmit={handleCreatePlan}>
+        <div className="form-grid">
+          <input value={planForm.code} onChange={(event) => setPlanForm({ ...planForm, code: event.target.value })} placeholder="Code" />
+          <input value={planForm.name} onChange={(event) => setPlanForm({ ...planForm, name: event.target.value })} placeholder="Name" />
+        </div>
+        <div className="form-grid">
+          <input
+            min="0"
+            type="number"
+            value={planForm.credits}
+            onChange={(event) => setPlanForm({ ...planForm, credits: event.target.value })}
+            placeholder="Credits"
+          />
+          <input
+            min="0"
+            type="number"
+            value={planForm.price}
+            onChange={(event) => setPlanForm({ ...planForm, price: event.target.value })}
+            placeholder="Price"
+          />
+        </div>
+        <div className="form-grid">
+          <input value={planForm.currency} onChange={(event) => setPlanForm({ ...planForm, currency: event.target.value })} placeholder="Currency" />
+          <input
+            type="number"
+            value={planForm.sortOrder}
+            onChange={(event) => setPlanForm({ ...planForm, sortOrder: event.target.value })}
+            placeholder="Sort"
+          />
+        </div>
+        <button className="ghost-button" type="submit">
+          Create package
+        </button>
+      </form>
+
+      <div className="compact-list">
+        {pricingPlans.slice(0, 5).map((plan) => (
+          <article key={plan._id}>
+            <strong>{plan.name}</strong>
+            <span>{plan.code} - {plan.credits} credits - {plan.price.toLocaleString('vi-VN')} {plan.currency} - {plan.active ? 'active' : 'inactive'}</span>
+            <button className="ghost-button small-action" type="button" onClick={() => handleTogglePlan(plan)}>
+              {plan.active ? 'Disable' : 'Enable'}
+            </button>
+          </article>
+        ))}
+      </div>
+
+      <div className="section-title compact">
+        <Sparkles size={20} />
+        <h3>Payment management</h3>
+      </div>
+
+      <label>
+        Payment status
+        <select value={paymentStatusFilter} onChange={handlePaymentFilter}>
+          <option value="">all</option>
+          <option value="paid">paid</option>
+          <option value="pending">pending</option>
+          <option value="failed">failed</option>
+          <option value="refunded">refunded</option>
+        </select>
+      </label>
+
+      <div className="compact-list">
+        {payments.length === 0 && <div className="empty small">No payments.</div>}
+        {payments.slice(0, 5).map((payment) => (
+          <article key={payment._id}>
+            <strong>{payment.planCode} - {payment.status}</strong>
+            <span>{payment.user?.email || 'unknown user'} - {payment.credits} credits - {payment.amount.toLocaleString('vi-VN')} {payment.currency}</span>
           </article>
         ))}
       </div>

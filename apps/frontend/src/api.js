@@ -177,6 +177,29 @@ export function getAdminVideos(status = '') {
   return apiFetch(`/admin/videos${query}`);
 }
 
+export function getAdminPricingPlans() {
+  return apiFetch('/admin/pricing-plans');
+}
+
+export function createAdminPricingPlan(payload) {
+  return apiFetch('/admin/pricing-plans', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function updateAdminPricingPlan(id, payload) {
+  return apiFetch(`/admin/pricing-plans/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function getAdminPayments(status = '') {
+  const query = status ? `?status=${encodeURIComponent(status)}` : '';
+  return apiFetch(`/admin/payments${query}`);
+}
+
 export function createCheckout(payload) {
   return apiFetch('/payments/checkout', {
     method: 'POST',

@@ -6,6 +6,7 @@ import { Coupon } from '../models/Coupon.js';
 import { CreditTransaction } from '../models/CreditTransaction.js';
 import { GenerationJob } from '../models/GenerationJob.js';
 import { Payment } from '../models/Payment.js';
+import { PricingPlan } from '../models/PricingPlan.js';
 import { Promotion } from '../models/Promotion.js';
 import { PromotionRegistration } from '../models/PromotionRegistration.js';
 import { User } from '../models/User.js';
@@ -54,6 +55,18 @@ const promotionSchema = z.object({
 });
 
 const promotionUpdateSchema = promotionSchema.partial();
+
+const pricingPlanSchema = z.object({
+  code: z.string().min(2).max(40),
+  name: z.string().min(2).max(120),
+  credits: z.coerce.number().int().min(0),
+  price: z.coerce.number().min(0),
+  currency: z.string().min(3).max(3).default('VND'),
+  active: z.coerce.boolean().default(true),
+  sortOrder: z.coerce.number().int().default(0)
+});
+
+const pricingPlanUpdateSchema = pricingPlanSchema.partial();
 
 const videoCostSchema = z.object({
   ffmpegBaseCredits: z.coerce.number().int().min(0).optional(),
@@ -355,6 +368,85 @@ adminRoutes.get('/videos', async (req, res, next) => {
       .limit(100);
 
     res.json({ videos });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.get('/pricing-plans', async (req, res, next) => {
+  try {
+    const plans = await PricingPlan.find().sort({ sortOrder: 1, createdAt: -1 });
+    res.json({ plans });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.post('/pricing-plans', async (req, res, next) => {
+  try {
+    const data = pricingPlanSchema.parse(req.body);
+    const plan = await PricingPlan.create({
+      ...data,
+      code: data.code.toLowerCase(),
+      currency: data.currency.toUpperCase()
+    });
+
+    await writeAuditLog({
+      actor: req.user._id,
+      action: 'admin.create_pricing_plan',
+      resourceType: 'PricingPlan',
+      resourceId: plan._id.toString(),
+      req
+    });
+
+    res.status(201).json({ plan });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.patch('/pricing-plans/:id', async (req, res, next) => {
+  try {
+    const data = pricingPlanUpdateSchema.parse(req.body);
+    const update = {
+      ...data,
+      ...(data.code ? { code: data.code.toLowerCase() } : {}),
+      ...(data.currency ? { currency: data.currency.toUpperCase() } : {})
+    };
+    const plan = await PricingPlan.findByIdAndUpdate(req.params.id, update, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!plan) {
+      return res.status(404).json({ message: 'Khong tim thay goi credit' });
+    }
+
+    await writeAuditLog({
+      actor: req.user._id,
+      action: 'admin.update_pricing_plan',
+      resourceType: 'PricingPlan',
+      resourceId: plan._id.toString(),
+      req,
+      metadata: update
+    });
+
+    res.json({ plan });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.get('/payments', async (req, res, next) => {
+  try {
+    const status = String(req.query.status || '').trim();
+    const filter = status ? { status } : {};
+    const payments = await Payment.find(filter)
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    res.json({ payments });
   } catch (error) {
     next(error);
   }

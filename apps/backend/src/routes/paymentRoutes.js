@@ -7,7 +7,7 @@ import { createCheckoutWithCoupon, recordPaymentEvent, refundPayment } from '../
 export const paymentRoutes = express.Router();
 
 const checkoutSchema = z.object({
-  planCode: z.enum(['trial', 'standard', 'pro', 'premium']),
+  planCode: z.string().min(2).max(40),
   couponCode: z.string().max(40).optional().default(''),
   idempotencyKey: z.string().min(8).max(120)
 });
