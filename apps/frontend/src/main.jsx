@@ -54,6 +54,7 @@ import {
   register,
   registerPromotion,
   reportProject,
+  refundAdminPayment,
   saveSession,
   updateAdminContentReport,
   updateAdminUser,
@@ -817,6 +818,24 @@ function AdminPanel() {
     }
   }
 
+  async function handleRefundPayment(paymentId) {
+    const reason = window.prompt('Refund reason?') || 'Admin refund';
+    setMessage('');
+    setError('');
+
+    try {
+      await refundAdminPayment(paymentId, {
+        reason,
+        idempotencyKey: `refund-${paymentId}-${crypto.randomUUID()}`
+      });
+      const result = await getAdminPayments(paymentStatusFilter);
+      setPayments(result.payments || []);
+      setMessage('Payment refunded.');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function handleReportStatus(reportId, status) {
     setMessage('');
     setError('');
@@ -1072,6 +1091,11 @@ function AdminPanel() {
           <article key={payment._id}>
             <strong>{payment.planCode} - {payment.status}</strong>
             <span>{payment.user?.email || 'unknown user'} - {payment.credits} credits - {payment.amount.toLocaleString('vi-VN')} {payment.currency}</span>
+            {payment.status === 'paid' && (
+              <button className="ghost-button small-action" type="button" onClick={() => handleRefundPayment(payment._id)}>
+                Refund
+              </button>
+            )}
           </article>
         ))}
       </div>

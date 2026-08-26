@@ -207,6 +207,13 @@ export function getAdminPayments(status = '') {
   return apiFetch(`/admin/payments${query}`);
 }
 
+export function refundAdminPayment(id, payload) {
+  return apiFetch(`/payments/${id}/refund`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
 export function createCheckout(payload) {
   return apiFetch('/payments/checkout', {
     method: 'POST',
