@@ -46,3 +46,7 @@ Chay `npm run seed:demo` de tao tai khoan mau.
 8. Admin user management and credit adjustment.
 9. Admin promotion or credit package management.
 10. MongoDB Atlas collections/data explorer.
+
+## Common demo issue
+
+Neu frontend mo duoc nhung hien `Failed to fetch`, thuong la backend chua chay hoac MongoDB Atlas dang chan IP. Hay mo MongoDB Atlas `Network Access` va them IP hien tai, sau do chay lai backend.

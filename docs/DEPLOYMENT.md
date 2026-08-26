@@ -46,6 +46,14 @@ SMTP_FROM=
 
 Dung MongoDB Atlas, tao database user va allow IP theo dich vu deploy.
 
+Neu backend bao loi `Could not connect to any servers in your MongoDB Atlas cluster`, kiem tra:
+
+1. Atlas vao `Database & Network Access`.
+2. Mo `Network Access`.
+3. Them IP hien tai khi demo local, hoac them IP/server outbound cua Render/Railway khi deploy.
+4. Neu chi demo nhanh co the dung `0.0.0.0/0`, sau demo nen go bo hoac gioi han lai.
+5. Kiem tra `MONGODB_URI` dung username, password va cluster URL.
+
 ## Redis
 
 Dung Upstash Redis hoac Redis Cloud. Gan `REDIS_URL` cho ca API va worker.
@@ -70,6 +78,7 @@ Neu co SMTP provider, cau hinh `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS
 - `PUBLIC_BACKEND_URL` phai dung domain backend deploy.
 - Bat `QUEUE_MODE=redis` khi deploy.
 - Kiem tra `/api/health` va `/api/health/ready` sau khi deploy backend.
+- Neu backend khong start vi MongoDB Atlas, cap nhat Network Access truoc khi test tiep.
 
 ## Local storage lifecycle
 
