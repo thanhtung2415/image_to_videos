@@ -38,6 +38,7 @@ export async function registerPromotionForUser({ userId, code }) {
   }
 
   const promotion = validation.promotion;
+  const now = new Date();
   const exists = await PromotionRegistration.findOne({
     user: userId,
     promotion: promotion._id
@@ -51,29 +52,64 @@ export async function registerPromotionForUser({ userId, code }) {
     };
   }
 
-  const registration = await PromotionRegistration.create({
-    user: userId,
-    promotion: promotion._id,
-    code: promotion.code,
-    creditBonus: promotion.creditBonus
-  });
+  const updatedPromotion = await Promotion.findOneAndUpdate(
+    {
+      _id: promotion._id,
+      status: 'active',
+      startsAt: { $lte: now },
+      endsAt: { $gte: now },
+      $or: [
+        { maxRegistrations: 0 },
+        { $expr: { $lt: ['$registeredCount', '$maxRegistrations'] } }
+      ]
+    },
+    { $inc: { registeredCount: 1 } },
+    { new: true }
+  );
 
-  await Promotion.findByIdAndUpdate(promotion._id, {
-    $inc: { registeredCount: 1 }
-  });
+  if (!updatedPromotion) {
+    return {
+      ok: false,
+      status: 400,
+      message: 'Promotion khong hop le hoac da het han'
+    };
+  }
 
-  const user = await grantPromotionCredits({
-    userId,
-    promotionId: promotion._id,
-    code: promotion.code,
-    amount: promotion.creditBonus,
-    idempotencyKey: `promotion:${registration._id}`
-  });
+  try {
+    const registration = await PromotionRegistration.create({
+      user: userId,
+      promotion: updatedPromotion._id,
+      code: updatedPromotion.code,
+      creditBonus: updatedPromotion.creditBonus
+    });
 
-  return {
-    ok: true,
-    promotion,
-    registration,
-    user
-  };
+    const user = await grantPromotionCredits({
+      userId,
+      promotionId: updatedPromotion._id,
+      code: updatedPromotion.code,
+      amount: updatedPromotion.creditBonus,
+      idempotencyKey: `promotion:${registration._id}`
+    });
+
+    return {
+      ok: true,
+      promotion: updatedPromotion,
+      registration,
+      user
+    };
+  } catch (error) {
+    await Promotion.findByIdAndUpdate(updatedPromotion._id, {
+      $inc: { registeredCount: -1 }
+    });
+
+    if (error.code === 11000) {
+      return {
+        ok: false,
+        status: 409,
+        message: 'Ban da dang ky promotion nay'
+      };
+    }
+
+    throw error;
+  }
 }
