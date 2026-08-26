@@ -11,13 +11,15 @@
 - Notification va audit log co ban.
 - Security headers, rate limit va moderation co ban.
 - Account export/delete, coupon, refund va provider health.
+- Replicate va fal.ai image-to-video provider.
+- Promotion, signup bonus, credit history va admin credit adjustment.
+- Admin dashboard cho user, video, payment, promotion, package, report, audit log.
 
 ## Production
 
-- Noi API that cho fal.ai, Runway hoac Luma.
+- Noi them API that cho Runway hoac Luma neu can them provider.
 - Bo sung payment payOS hoac Stripe voi webhook signature.
 - Them email provider that.
-- Hoan thien admin dashboard UI.
 - Tach Redis/worker tren ha tang deploy rieng.
 - Bo sung provider health monitoring va DLQ dashboard.
 
@@ -26,4 +28,4 @@
 - AI model marketplace.
 - Batch generation.
 - Team workspace.
-- Analytics doanh thu va provider cost.
+- Analytics doanh thu va provider cost nang cao.
