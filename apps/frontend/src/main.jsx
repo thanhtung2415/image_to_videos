@@ -2,18 +2,34 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   Activity,
+  BarChart3,
+  Bell,
+  Clapperboard,
+  CreditCard,
+  Database,
   Download,
   Film,
   Flag,
+  Gift,
+  Home,
   ImagePlus,
+  LayoutDashboard,
   LoaderCircle,
   LogOut,
+  Menu,
   Play,
   RefreshCcw,
+  Search,
+  Settings,
   Shield,
+  SlidersHorizontal,
   Sparkles,
   Trash2,
-  Upload
+  Upload,
+  UserRound,
+  Users,
+  Wallet,
+  X
 } from 'lucide-react';
 import {
   adjustAdminUserCredits,
@@ -82,6 +98,37 @@ const emptyAuth = {
   promotionCode: ''
 };
 
+const userNavigation = [
+  { id: 'home', label: 'Home', icon: Home },
+  { id: 'create', label: 'Create Video', icon: Clapperboard },
+  { id: 'videos', label: 'My Videos', icon: Film },
+  { id: 'credits', label: 'Credits', icon: Wallet },
+  { id: 'promotions', label: 'Promotions', icon: Gift },
+  { id: 'profile', label: 'Profile', icon: UserRound },
+  { id: 'settings', label: 'Settings', icon: Settings }
+];
+
+const adminNavigation = [
+  { id: 'admin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'admin-users', label: 'Users', icon: Users },
+  { id: 'admin-videos', label: 'Videos', icon: Film },
+  { id: 'admin-credits', label: 'Credits', icon: Wallet },
+  { id: 'admin-payments', label: 'Payments', icon: CreditCard },
+  { id: 'admin-promotions', label: 'Promotions', icon: Gift },
+  { id: 'admin-reports', label: 'Reports', icon: BarChart3 },
+  { id: 'admin-settings', label: 'Settings', icon: SlidersHorizontal },
+  { id: 'admin-audit', label: 'Audit Logs', icon: Database }
+];
+
+function buildVideoStats(projects) {
+  return {
+    total: projects.length,
+    completed: projects.filter((project) => project.status === 'completed').length,
+    processing: projects.filter((project) => ['queued', 'processing', 'post_processing', 'uploading'].includes(project.status)).length,
+    failed: projects.filter((project) => project.status === 'failed').length
+  };
+}
+
 function AuthPanel({ onSignedIn }) {
   const [mode, setMode] = useState('login');
   const [form, setForm] = useState(emptyAuth);
@@ -109,11 +156,14 @@ function AuthPanel({ onSignedIn }) {
   return (
     <main className="auth-page">
       <section className="auth-card">
-        <div className="brand-mark">
-          <Sparkles size={28} />
+        <div className="auth-hero">
+          <div className="brand-mark">
+            <Sparkles size={28} />
+          </div>
+          <span className="eyebrow">AI video workspace</span>
+          <h1>ImageToVideo</h1>
+          <p>Upload an image, write a motion prompt, and generate a short demo video with credits, promotions, and admin control.</p>
         </div>
-        <h1>Image To Videos</h1>
-        <p>Dang nhap de upload anh va tao video ngan bang FFmpeg MVP.</p>
 
         <div className="tabs">
           <button className={mode === 'login' ? 'active' : ''} type="button" onClick={() => setMode('login')}>
@@ -170,7 +220,7 @@ function AuthPanel({ onSignedIn }) {
             />
           </label>
 
-          {error && <div className="alert">{error}</div>}
+          {error && <div className="alert">Email hoac mat khau khong dung</div>}
 
           <button className="primary-button" disabled={loading} type="submit">
             {loading ? <LoaderCircle className="spin" size={18} /> : <Play size={18} />}
@@ -215,6 +265,8 @@ function ProjectForm({ onCreated }) {
 
   const selectedProvider = providers.find((item) => item.name === provider);
   const selectedModels = selectedProvider?.models || [];
+  const selectedCost = generationMode === 'ai' ? 20 : 5;
+  const imageSize = image ? `${(image.size / 1024 / 1024).toFixed(2)} MB` : '';
 
   function handleImageChange(file) {
     setImage(file);
@@ -252,10 +304,13 @@ function ProjectForm({ onCreated }) {
   }
 
   return (
-    <section className="panel">
-      <div className="section-title">
+    <section className="panel generation-panel">
+      <div className="section-title split-title">
+        <div>
+          <span className="eyebrow">Create video</span>
+          <h2>Generation studio</h2>
+        </div>
         <ImagePlus size={22} />
-        <h2>Tao video moi</h2>
       </div>
 
       <form className="project-form" onSubmit={handleSubmit}>
@@ -267,6 +322,7 @@ function ProjectForm({ onCreated }) {
         <label>
           Prompt
           <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} maxLength={600} rows={3} />
+          <span className="field-hint">{prompt.length}/600 characters</span>
         </label>
 
         <div className="form-grid">
@@ -335,7 +391,8 @@ function ProjectForm({ onCreated }) {
 
         <button className="upload-box" type="button" onClick={() => fileInputRef.current?.click()}>
           {preview ? <img src={preview} alt="Preview upload" /> : <Upload size={32} />}
-          <span>{image ? image.name : 'Chon anh JPG, PNG hoac WEBP'}</span>
+          <span>{image ? image.name : 'Drag and drop or browse image'}</span>
+          <small>{image ? imageSize : 'JPG, PNG, WEBP up to configured upload limit'}</small>
         </button>
 
         <input
@@ -347,6 +404,17 @@ function ProjectForm({ onCreated }) {
         />
 
         {error && <div className="alert">{error}</div>}
+
+        <div className="cost-strip">
+          <div>
+            <span>Generation cost</span>
+            <strong>{selectedCost} credits</strong>
+          </div>
+          <div>
+            <span>Quality</span>
+            <strong>720p demo</strong>
+          </div>
+        </div>
 
         <button className="primary-button" disabled={!image || loading} type="submit">
           {loading ? <LoaderCircle className="spin" size={18} /> : <Film size={18} />}
@@ -1983,11 +2051,180 @@ function ProjectCard({ project, onCancel, onRefresh }) {
   );
 }
 
+function AppSidebar({ activeView, currentUser, mobileOpen, onClose, onLogout, onNavigate }) {
+  const isAdmin = currentUser.role === 'admin';
+  const navigation = isAdmin ? adminNavigation : userNavigation;
+  const creditBalance = currentUser.creditWallet?.availableCredit ?? 0;
+
+  return (
+    <aside className={`app-sidebar ${mobileOpen ? 'is-open' : ''}`}>
+      <div className="sidebar-brand">
+        <div className="brand-mark small">
+          <Sparkles size={22} />
+        </div>
+        <div className="brand-copy">
+          <strong>ImageToVideo</strong>
+          <span>{isAdmin ? 'Admin Console' : 'AI Studio'}</span>
+        </div>
+        <button className="icon-button mobile-close" type="button" onClick={onClose} aria-label="Close menu">
+          <X size={18} />
+        </button>
+      </div>
+
+      <nav className="sidebar-nav" aria-label={isAdmin ? 'Admin navigation' : 'User navigation'}>
+        {navigation.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <button
+              className={activeView === item.id ? 'active' : ''}
+              key={item.id}
+              type="button"
+              onClick={() => {
+                onNavigate(item.id);
+                onClose();
+              }}
+            >
+              <Icon size={18} />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="sidebar-footer">
+        <div className="credit-pill">
+          <span>Credit balance</span>
+          <strong>{creditBalance}</strong>
+        </div>
+        <div className="sidebar-user">
+          <div className="avatar">{(currentUser.name || currentUser.email || 'U').charAt(0).toUpperCase()}</div>
+          <div className="user-copy">
+            <strong>{currentUser.name}</strong>
+            <span>{currentUser.role}</span>
+          </div>
+          <button className="icon-button" type="button" onClick={onLogout} aria-label="Dang xuat">
+            <LogOut size={18} />
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function DashboardHome({ currentUser, projects, onGoCreate, onGoVideos }) {
+  const stats = buildVideoStats(projects);
+  const recentVideos = projects.slice(0, 3);
+
+  return (
+    <div className="page-stack">
+      <section className="hero-panel">
+        <div>
+          <span className="eyebrow">Commercial MVP</span>
+          <h1>Welcome back, {currentUser.name}</h1>
+          <p>Turn your images into short cinematic videos with AI providers or the stable FFmpeg demo engine.</p>
+        </div>
+        <div className="hero-actions">
+          <button className="primary-button" type="button" onClick={onGoCreate}>
+            <Clapperboard size={18} />
+            Create Video
+          </button>
+          <button className="ghost-button" type="button" onClick={onGoVideos}>
+            <Film size={18} />
+            View My Videos
+          </button>
+        </div>
+      </section>
+
+      <section className="stats-grid">
+        <article className="metric-card accent">
+          <span>Credit Balance</span>
+          <strong>{currentUser.creditWallet?.availableCredit ?? 0}</strong>
+        </article>
+        <article className="metric-card">
+          <span>Total Videos</span>
+          <strong>{stats.total}</strong>
+        </article>
+        <article className="metric-card">
+          <span>Completed</span>
+          <strong>{stats.completed}</strong>
+        </article>
+        <article className="metric-card">
+          <span>Processing</span>
+          <strong>{stats.processing}</strong>
+        </article>
+      </section>
+
+      <section className="panel">
+        <div className="section-title split-title">
+          <div>
+            <span className="eyebrow">Recent work</span>
+            <h2>Latest videos</h2>
+          </div>
+          <button className="ghost-button small-action" type="button" onClick={onGoVideos}>
+            View all
+          </button>
+        </div>
+
+        {recentVideos.length === 0 && (
+          <div className="empty">
+            <strong>No videos yet</strong>
+            <span>Create your first video from an image.</span>
+          </div>
+        )}
+
+        <div className="project-list gallery-list">
+          {recentVideos.map((project) => (
+            <ProjectCard key={project._id} project={project} onCancel={() => {}} onRefresh={() => {}} />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function HistoryPanel({ error, loading, onCancelProject, onRefreshProject, projects }) {
+  return (
+    <section className="panel history-panel">
+      <div className="section-title split-title">
+        <div>
+          <span className="eyebrow">My videos</span>
+          <h2>Video gallery</h2>
+        </div>
+        <Film size={22} />
+      </div>
+
+      {error && <div className="alert">{error}</div>}
+      {loading && (
+        <div className="skeleton-list">
+          <div />
+          <div />
+          <div />
+        </div>
+      )}
+      {!loading && projects.length === 0 && (
+        <div className="empty">
+          <strong>No videos yet</strong>
+          <span>Create your first video to see it here.</span>
+        </div>
+      )}
+
+      <div className="project-list">
+        {projects.map((project) => (
+          <ProjectCard key={project._id} project={project} onCancel={onCancelProject} onRefresh={onRefreshProject} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Dashboard({ user, onLogout }) {
   const [projects, setProjects] = useState([]);
   const [currentUser, setCurrentUser] = useState(user);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeView, setActiveView] = useState(user.role === 'admin' ? 'admin-dashboard' : 'home');
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const activeProjects = useMemo(
     () => projects.filter((project) => ['queued', 'processing', 'post_processing', 'uploading'].includes(project.status)),
@@ -2121,51 +2358,104 @@ function Dashboard({ user, onLogout }) {
     }));
   }
 
-  return (
-    <main className={`dashboard ${currentUser.role === 'admin' ? 'is-admin' : 'is-user'}`}>
-      <header className="topbar">
-        <div>
-          <span className="eyebrow">Commercial MVP</span>
-          <h1>Image To Videos</h1>
-        </div>
-        <div className="account-box">
-          <div>
-            <strong>{currentUser.name}</strong>
-            <span>{currentUser.creditWallet?.availableCredit ?? 0} credits</span>
-          </div>
-          <button className="icon-button" type="button" onClick={handleLogout} aria-label="Dang xuat">
-            <LogOut size={20} />
-          </button>
-        </div>
-      </header>
+  const isAdmin = currentUser.role === 'admin';
+  const pageTitle = isAdmin
+    ? adminNavigation.find((item) => item.id === activeView)?.label || 'Dashboard'
+    : userNavigation.find((item) => item.id === activeView)?.label || 'Home';
 
-      <div className={`layout ${currentUser.role === 'admin' ? 'admin-layout' : ''}`}>
-        <div className="sidebar-stack">
+  function renderUserPage() {
+    if (activeView === 'home') {
+      return (
+        <DashboardHome
+          currentUser={currentUser}
+          projects={projects}
+          onGoCreate={() => setActiveView('create')}
+          onGoVideos={() => setActiveView('videos')}
+        />
+      );
+    }
+
+    if (activeView === 'create') {
+      return (
+        <div className="create-workspace">
           <ProjectForm onCreated={handleCreated} />
-          <PricingPanel onPurchased={handlePurchased} onWalletChanged={handleWalletChanged} />
-          <NotificationsPanel />
-          <AccountPanel user={currentUser} onUpdated={updateCurrentUser} onDeleted={onLogout} />
+          <HistoryPanel
+            error={error}
+            loading={loading}
+            projects={projects.slice(0, 4)}
+            onCancelProject={handleCancelProject}
+            onRefreshProject={refreshProject}
+          />
         </div>
+      );
+    }
 
-        <section className="panel history-panel">
-          <div className="section-title">
-            <Film size={22} />
-            <h2>Video da tao</h2>
+    if (activeView === 'videos') {
+      return (
+        <HistoryPanel
+          error={error}
+          loading={loading}
+          projects={projects}
+          onCancelProject={handleCancelProject}
+          onRefreshProject={refreshProject}
+        />
+      );
+    }
+
+    if (activeView === 'credits' || activeView === 'promotions') {
+      return <PricingPanel onPurchased={handlePurchased} onWalletChanged={handleWalletChanged} />;
+    }
+
+    if (activeView === 'settings') {
+      return <NotificationsPanel />;
+    }
+
+    return <AccountPanel user={currentUser} onUpdated={updateCurrentUser} onDeleted={onLogout} />;
+  }
+
+  return (
+    <main className={`dashboard app-shell ${isAdmin ? 'is-admin' : 'is-user'}`}>
+      <AppSidebar
+        activeView={activeView}
+        currentUser={currentUser}
+        mobileOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        onLogout={handleLogout}
+        onNavigate={setActiveView}
+      />
+
+      {mobileOpen && <button className="sidebar-scrim" type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu" />}
+
+      <section className="workspace">
+        <header className="topbar">
+          <button className="icon-button menu-button" type="button" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu size={20} />
+          </button>
+          <div>
+            <span className="eyebrow">{isAdmin ? 'Admin Panel' : 'AI Video Studio'}</span>
+            <h1>{pageTitle}</h1>
           </div>
-
-          {error && <div className="alert">{error}</div>}
-          {loading && <div className="empty">Dang tai du lieu...</div>}
-          {!loading && projects.length === 0 && <div className="empty">Chua co video nao.</div>}
-
-          <div className="project-list">
-            {projects.map((project) => (
-              <ProjectCard key={project._id} project={project} onCancel={handleCancelProject} onRefresh={refreshProject} />
-            ))}
+          <div className="topbar-tools">
+            <div className="search-box">
+              <Search size={16} />
+              <span>Search workspace</span>
+            </div>
+            <button className="icon-button" type="button" onClick={() => setActiveView(isAdmin ? 'admin-audit' : 'settings')} aria-label="Notifications">
+              <Bell size={18} />
+            </button>
+            <div className="account-box">
+              <div>
+                <strong>{currentUser.name}</strong>
+                <span>{currentUser.creditWallet?.availableCredit ?? 0} credits</span>
+              </div>
+            </div>
           </div>
-        </section>
+        </header>
 
-        {currentUser.role === 'admin' && <AdminPanel />}
-      </div>
+        <div className={`layout ${isAdmin ? 'admin-layout' : ''}`}>
+          {isAdmin ? <AdminPanel /> : renderUserPage()}
+        </div>
+      </section>
     </main>
   );
 }
