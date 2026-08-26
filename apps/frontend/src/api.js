@@ -85,6 +85,10 @@ export function getCreditTransactions() {
   return apiFetch('/credits/transactions');
 }
 
+export function getCreditWallet() {
+  return apiFetch('/credits/wallet');
+}
+
 export function getNotificationPreferences() {
   return apiFetch('/notifications/preferences/me');
 }

@@ -41,6 +41,7 @@ import {
   getAdminVideoCosts,
   getActivePromotions,
   getCreditTransactions,
+  getCreditWallet,
   getAccountExportUrl,
   getProjectEventsUrl,
   getProject,
@@ -1619,9 +1620,38 @@ function Dashboard({ user, onLogout }) {
     }
   }
 
+  function updateCurrentUser(updater) {
+    setCurrentUser((value) => {
+      const nextUser = typeof updater === 'function' ? updater(value) : updater;
+      const token = localStorage.getItem('image_to_videos_token');
+
+      if (token) {
+        saveSession({ token, user: nextUser });
+      }
+
+      return nextUser;
+    });
+  }
+
+  async function refreshWallet() {
+    try {
+      const result = await getCreditWallet();
+      updateCurrentUser((value) => ({
+        ...value,
+        creditWallet: result.wallet
+      }));
+    } catch {
+      // Wallet refresh is best-effort because project polling already drives the UI.
+    }
+  }
+
   async function refreshProject(projectId) {
     const result = await getProject(projectId);
     setProjects((items) => items.map((item) => (item._id === projectId ? result.project : item)));
+
+    if (['completed', 'failed', 'cancelled'].includes(result.project.status)) {
+      await refreshWallet();
+    }
   }
 
   async function handleCancelProject(projectId) {
@@ -1629,7 +1659,7 @@ function Dashboard({ user, onLogout }) {
     setProjects((items) => items.map((item) => (item._id === projectId ? result.project : item)));
 
     if (result.wallet) {
-      setCurrentUser((value) => ({
+      updateCurrentUser((value) => ({
         ...value,
         creditWallet: result.wallet
       }));
@@ -1653,6 +1683,7 @@ function Dashboard({ user, onLogout }) {
         setProjects((items) => items.map((item) => (item._id === project._id ? data.project : item)));
 
         if (['completed', 'failed', 'cancelled'].includes(data.project.status)) {
+          refreshWallet();
           source.close();
         }
       });
@@ -1681,7 +1712,7 @@ function Dashboard({ user, onLogout }) {
 
   function handleCreated(project) {
     setProjects((items) => [project, ...items]);
-    setCurrentUser((value) => ({
+    updateCurrentUser((value) => ({
       ...value,
       creditWallet: {
         ...value.creditWallet,
@@ -1692,7 +1723,7 @@ function Dashboard({ user, onLogout }) {
   }
 
   function handlePurchased(payment) {
-    setCurrentUser((value) => ({
+    updateCurrentUser((value) => ({
       ...value,
       creditWallet: {
         ...value.creditWallet,
@@ -1703,7 +1734,7 @@ function Dashboard({ user, onLogout }) {
   }
 
   function handleWalletChanged(wallet) {
-    setCurrentUser((value) => ({
+    updateCurrentUser((value) => ({
       ...value,
       creditWallet: wallet
     }));
@@ -1732,7 +1763,7 @@ function Dashboard({ user, onLogout }) {
           <ProjectForm onCreated={handleCreated} />
           <PricingPanel onPurchased={handlePurchased} onWalletChanged={handleWalletChanged} />
           <NotificationsPanel />
-          <AccountPanel user={currentUser} onUpdated={setCurrentUser} onDeleted={onLogout} />
+          <AccountPanel user={currentUser} onUpdated={updateCurrentUser} onDeleted={onLogout} />
           {currentUser.role === 'admin' && <AdminPanel />}
         </div>
 
