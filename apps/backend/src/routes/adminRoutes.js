@@ -42,6 +42,10 @@ const creditAdjustmentSchema = z.object({
   reason: z.string().max(200).default('')
 });
 
+const contentReportUpdateSchema = z.object({
+  status: z.enum(['open', 'reviewing', 'resolved', 'dismissed'])
+});
+
 const promotionSchema = z.object({
   name: z.string().min(3).max(120),
   code: z.string().min(3).max(40),
@@ -353,6 +357,35 @@ adminRoutes.get('/content-reports', async (req, res, next) => {
       .sort({ createdAt: -1 })
       .limit(100);
     res.json({ reports });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.patch('/content-reports/:id', async (req, res, next) => {
+  try {
+    const data = contentReportUpdateSchema.parse(req.body);
+    const report = await ContentReport.findByIdAndUpdate(req.params.id, data, {
+      new: true,
+      runValidators: true
+    })
+      .populate('reporter', 'name email')
+      .populate('project', 'title status');
+
+    if (!report) {
+      return res.status(404).json({ message: 'Khong tim thay report' });
+    }
+
+    await writeAuditLog({
+      actor: req.user._id,
+      action: 'admin.update_content_report',
+      resourceType: 'ContentReport',
+      resourceId: report._id.toString(),
+      req,
+      metadata: data
+    });
+
+    res.json({ report });
   } catch (error) {
     next(error);
   }

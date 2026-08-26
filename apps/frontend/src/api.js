@@ -172,6 +172,13 @@ export function getAdminContentReports() {
   return apiFetch('/admin/content-reports');
 }
 
+export function updateAdminContentReport(id, payload) {
+  return apiFetch(`/admin/content-reports/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload)
+  });
+}
+
 export function getAdminVideos(status = '') {
   const query = status ? `?status=${encodeURIComponent(status)}` : '';
   return apiFetch(`/admin/videos${query}`);

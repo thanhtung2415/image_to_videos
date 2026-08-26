@@ -80,6 +80,10 @@ app.use((error, req, res, next) => {
     return res.status(400).json({ message: 'Anh toi da 5MB' });
   }
 
+  if (error.code === 11000) {
+    return res.status(409).json({ message: 'Du lieu da ton tai' });
+  }
+
   console.error(error);
   res.status(500).json({ message: 'Loi may chu' });
 });

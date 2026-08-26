@@ -55,6 +55,7 @@ import {
   registerPromotion,
   reportProject,
   saveSession,
+  updateAdminContentReport,
   updateAdminUser,
   updateAdminPricingPlan,
   updateAdminVideoCosts,
@@ -816,6 +817,19 @@ function AdminPanel() {
     }
   }
 
+  async function handleReportStatus(reportId, status) {
+    setMessage('');
+    setError('');
+
+    try {
+      const result = await updateAdminContentReport(reportId, { status });
+      setReports((items) => items.map((item) => (item._id === result.report._id ? result.report : item)));
+      setMessage('Report updated.');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
     <section className="panel admin-panel">
       <div className="section-title">
@@ -1268,7 +1282,18 @@ function AdminPanel() {
         {reports.slice(0, 5).map((report) => (
           <article key={report._id}>
             <strong>{report.project?.title || 'Unknown project'}</strong>
-            <span>{report.reason}</span>
+            <span>{report.reason} - {report.status}</span>
+            <div className="button-stack">
+              <button className="ghost-button small-action" type="button" onClick={() => handleReportStatus(report._id, 'reviewing')}>
+                Review
+              </button>
+              <button className="ghost-button small-action" type="button" onClick={() => handleReportStatus(report._id, 'resolved')}>
+                Resolve
+              </button>
+              <button className="ghost-button small-action" type="button" onClick={() => handleReportStatus(report._id, 'dismissed')}>
+                Dismiss
+              </button>
+            </div>
           </article>
         ))}
       </div>
