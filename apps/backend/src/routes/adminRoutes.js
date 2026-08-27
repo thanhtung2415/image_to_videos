@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import { z } from 'zod';
 import { AuditLog } from '../models/AuditLog.js';
 import { ContentReport } from '../models/ContentReport.js';
@@ -24,6 +25,7 @@ import {
   updateVideoCostSettings
 } from '../services/settingService.js';
 import { writeAuditLog } from '../services/auditService.js';
+import { canDeleteVideo, softDeleteVideo } from '../services/videoDeletionService.js';
 
 export const adminRoutes = express.Router();
 
@@ -103,6 +105,10 @@ const videoCostSchema = z.object({
   aiDefaultBaseCredits: z.coerce.number().int().min(0).optional(),
   extraSecondCredits: z.coerce.number().int().min(0).optional(),
   modelCredits: z.record(z.string(), z.coerce.number().int().min(0)).optional()
+});
+
+const adminDeleteVideoSchema = z.object({
+  reason: z.string().max(240).optional().default('Admin delete')
 });
 
 const statusSchema = z.object({
@@ -688,10 +694,20 @@ adminRoutes.patch('/content-reports/:id', async (req, res, next) => {
 
 adminRoutes.get('/videos', async (req, res, next) => {
   try {
+    const page = Math.max(1, Number(req.query.page || 1));
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit || 50)));
+    const search = String(req.query.search || '').trim();
     const status = String(req.query.status || '').trim();
     const filter = { ...queryDateRange(req) };
+    const includeDeleted = ['true', '1', 'yes'].includes(String(req.query.includeDeleted || '').toLowerCase());
 
-    if (status) {
+    if (status === 'deleted') {
+      filter.isDeleted = true;
+    } else if (!includeDeleted) {
+      filter.isDeleted = { $ne: true };
+    }
+
+    if (status && status !== 'deleted') {
       filter.status = status;
     }
 
@@ -707,12 +723,32 @@ adminRoutes.get('/videos', async (req, res, next) => {
       filter.user = String(req.query.userId);
     }
 
-    const videos = await VideoProject.find(filter)
-      .populate('user', 'name email')
-      .sort({ createdAt: -1 })
-      .limit(100);
+    if (search) {
+      const userMatches = await User.find({
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ]
+      }).select('_id');
 
-    res.json({ videos });
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { prompt: { $regex: search, $options: 'i' } },
+        ...(mongoose.isValidObjectId(search) ? [{ _id: search }] : []),
+        ...(userMatches.length ? [{ user: { $in: userMatches.map((user) => user._id) } }] : [])
+      ];
+    }
+
+    const [videos, total] = await Promise.all([
+      VideoProject.find(filter)
+        .populate('user', 'name email')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      VideoProject.countDocuments(filter)
+    ]);
+
+    res.json({ videos, pagination: { page, limit, total } });
   } catch (error) {
     next(error);
   }
@@ -730,6 +766,38 @@ adminRoutes.get('/videos/:id', async (req, res, next) => {
     }
 
     res.json({ video, job });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRoutes.delete('/videos/:id', async (req, res, next) => {
+  try {
+    const data = adminDeleteVideoSchema.parse(req.body || {});
+    const video = await VideoProject.findById(req.params.id);
+
+    if (!video) {
+      return res.status(404).json({ message: 'Khong tim thay video' });
+    }
+
+    if (video.isDeleted) {
+      return res.status(409).json({ message: 'Video da duoc xoa' });
+    }
+
+    if (!canDeleteVideo(video)) {
+      return res.status(409).json({ message: 'Video dang duoc xu ly nen chua the xoa truc tiep' });
+    }
+
+    await softDeleteVideo({
+      project: video,
+      actor: req.user,
+      actorRole: 'admin',
+      action: 'admin.video.delete',
+      reason: data.reason || 'Admin delete',
+      req
+    });
+
+    res.json({ success: true, message: 'Video deleted by administrator' });
   } catch (error) {
     next(error);
   }

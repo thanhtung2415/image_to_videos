@@ -62,6 +62,30 @@ const videoProjectSchema = new mongoose.Schema(
     errorMessage: {
       type: String,
       default: ''
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
+    deletedAt: {
+      type: Date,
+      default: null
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    deletedByRole: {
+      type: String,
+      enum: ['user', 'admin', null],
+      default: null
+    },
+    deletionReason: {
+      type: String,
+      default: '',
+      maxlength: 240
     }
   },
   { timestamps: true }

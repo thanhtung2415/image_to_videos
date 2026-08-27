@@ -995,6 +995,61 @@ textarea {
   gap: 10px;
 }
 
+.card-title-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.menu-wrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.admin-row-menu {
+  justify-self: end;
+}
+
+.action-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  display: grid;
+  min-width: 168px;
+  overflow: hidden;
+  border: 1px solid #30384a;
+  border-radius: 12px;
+  background: #10131a;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.38);
+}
+
+.action-menu a,
+.action-menu button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  border: 0;
+  border-bottom: 1px solid #202634;
+  background: transparent;
+  color: #f6f7fb;
+  padding: 0 12px;
+  text-align: left;
+  text-decoration: none;
+  font-weight: 780;
+}
+
+.action-menu a:hover,
+.action-menu button:hover:not(:disabled) {
+  background: #171c27;
+}
+
+.action-menu .danger-menu-item {
+  color: #ff8c8c;
+}
+
 .button-stack {
   display: grid;
 }
@@ -1245,6 +1300,7 @@ textarea {
 }
 
 .badge.cancelled,
+.badge.deleted,
 .badge.disabled,
 .badge.unknown {
   background: rgba(116, 123, 140, 0.14);

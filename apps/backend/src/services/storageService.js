@@ -81,6 +81,42 @@ export async function uploadRemoteVideo(videoUrl, fallbackPublicId = '') {
   };
 }
 
+export async function cleanupOutputVideo({ filePath = '', publicId = '' } = {}) {
+  const results = [];
+
+  if (publicId && hasCloudinaryConfig()) {
+    try {
+      await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+      results.push({ target: 'cloudinary', ok: true });
+    } catch (error) {
+      console.error('Cloudinary video cleanup failed', error);
+      results.push({ target: 'cloudinary', ok: false, message: error.message });
+    }
+  }
+
+  if (filePath) {
+    try {
+      const resolvedPath = path.resolve(filePath);
+      const resolvedUploadsRoot = path.resolve(uploadsRoot);
+      const relativePath = path.relative(resolvedUploadsRoot, resolvedPath);
+
+      if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+        results.push({ target: 'local', ok: false, message: 'Path is outside uploads directory' });
+      } else if (fs.existsSync(resolvedPath)) {
+        await fs.promises.unlink(resolvedPath);
+        results.push({ target: 'local', ok: true });
+      } else {
+        results.push({ target: 'local', ok: true, message: 'File already missing' });
+      }
+    } catch (error) {
+      console.error('Local video cleanup failed', error);
+      results.push({ target: 'local', ok: false, message: error.message });
+    }
+  }
+
+  return results;
+}
+
 export function ensureDirectory(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }

@@ -276,6 +276,13 @@ export function getAdminVideo(id) {
   return apiFetch(`/admin/videos/${id}`);
 }
 
+export function deleteAdminVideo(id, payload = {}) {
+  return apiFetch(`/admin/videos/${id}`, {
+    method: 'DELETE',
+    body: JSON.stringify(payload)
+  });
+}
+
 export function getAdminPricingPlans() {
   return apiFetch('/admin/credit-packages');
 }
@@ -338,6 +345,12 @@ export function createProject(formData) {
 export function cancelProject(id) {
   return apiFetch(`/projects/${id}/cancel`, {
     method: 'POST'
+  });
+}
+
+export function deleteProject(id) {
+  return apiFetch(`/projects/${id}`, {
+    method: 'DELETE'
   });
 }
 

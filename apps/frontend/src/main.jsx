@@ -8,6 +8,7 @@ import {
   CreditCard,
   Database,
   Download,
+  ExternalLink,
   Film,
   Flag,
   Gift,
@@ -17,6 +18,7 @@ import {
   LoaderCircle,
   LogOut,
   Menu,
+  MoreVertical,
   Play,
   RefreshCcw,
   Search,
@@ -42,6 +44,8 @@ import {
   createCheckout,
   createProject,
   deleteAccount,
+  deleteAdminVideo,
+  deleteProject,
   getAdminAuditLogs,
   getAdminCostSummary,
   getAdminContentReports,
@@ -706,6 +710,13 @@ function AdminPanel({ activeSection }) {
   const [selectedPromotion, setSelectedPromotion] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [videoStatusFilter, setVideoStatusFilter] = useState('');
+  const [videoProviderFilter, setVideoProviderFilter] = useState('');
+  const [videoSearch, setVideoSearch] = useState('');
+  const [videoFrom, setVideoFrom] = useState('');
+  const [videoTo, setVideoTo] = useState('');
+  const [includeDeletedVideos, setIncludeDeletedVideos] = useState(false);
+  const [deletingVideoId, setDeletingVideoId] = useState('');
+  const [adminVideoMenuId, setAdminVideoMenuId] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
   const [creditTypeFilter, setCreditTypeFilter] = useState('');
   const [userStatusFilter, setUserStatusFilter] = useState('');
@@ -771,7 +782,12 @@ function AdminPanel({ activeSection }) {
         getAdminVideoCosts(),
         getAdminSettings(),
         getAdminReportOverview(reportRange),
-        getAdminVideos(videoStatusFilter),
+        getAdminVideos({
+          status: videoStatusFilter,
+          provider: videoProviderFilter,
+          search: videoSearch,
+          includeDeleted: includeDeletedVideos ? 'true' : ''
+        }),
         getAdminPricingPlans(),
         getAdminPayments(paymentStatusFilter),
         getAdminAuditLogs(),
@@ -1080,14 +1096,62 @@ function AdminPanel({ activeSection }) {
     }
   }
 
+  async function loadAdminVideoList(overrides = {}) {
+    const filters = {
+      status: overrides.status ?? videoStatusFilter,
+      provider: overrides.provider ?? videoProviderFilter,
+      search: overrides.search ?? videoSearch,
+      from: overrides.from ?? videoFrom,
+      to: overrides.to ?? videoTo,
+      includeDeleted: (overrides.includeDeleted ?? includeDeletedVideos) ? 'true' : ''
+    };
+
+    const result = await getAdminVideos(filters);
+    setAdminVideos(result.videos || []);
+  }
+
   async function handleVideoFilter(event) {
     const nextStatus = event.target.value;
     setVideoStatusFilter(nextStatus);
     setError('');
 
     try {
-      const result = await getAdminVideos(nextStatus);
-      setAdminVideos(result.videos || []);
+      await loadAdminVideoList({ status: nextStatus });
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleVideoProviderFilter(event) {
+    const nextProvider = event.target.value;
+    setVideoProviderFilter(nextProvider);
+    setError('');
+
+    try {
+      await loadAdminVideoList({ provider: nextProvider });
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleVideoSearch(event) {
+    event.preventDefault();
+    setError('');
+
+    try {
+      await loadAdminVideoList();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleIncludeDeleted(event) {
+    const checked = event.target.checked;
+    setIncludeDeletedVideos(checked);
+    setError('');
+
+    try {
+      await loadAdminVideoList({ includeDeleted: checked });
     } catch (err) {
       setError(err.message);
     }
@@ -1100,8 +1164,40 @@ function AdminPanel({ activeSection }) {
     try {
       const result = await getAdminVideo(videoId);
       setSelectedVideo(result);
+      setAdminVideoMenuId('');
     } catch (err) {
       setError(err.message);
+    }
+  }
+
+  async function handleDeleteAdminVideo(video) {
+    const reason = window.prompt(`Reason for deletion\n\nUser: ${video.user?.email || 'unknown user'}\nVideo: ${video._id}\n\nThis action does not refund credits automatically.`, 'Admin delete');
+
+    if (reason === null) {
+      return;
+    }
+
+    if (!window.confirm('Delete video?\n\nThis video will no longer be available to the user.\nCredits will not be refunded automatically.')) {
+      return;
+    }
+
+    setDeletingVideoId(video._id);
+    setAdminVideoMenuId('');
+    setMessage('');
+    setError('');
+
+    try {
+      await deleteAdminVideo(video._id, { reason });
+      setMessage('Video deleted.');
+      await loadAdminVideoList();
+      if (selectedVideo?.video?._id === video._id) {
+        const result = await getAdminVideo(video._id);
+        setSelectedVideo(result);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingVideoId('');
     }
   }
 
@@ -1503,29 +1599,85 @@ function AdminPanel({ activeSection }) {
         <h3>Video review</h3>
       </div>
 
-      <label>
-        Status
-        <select value={videoStatusFilter} onChange={handleVideoFilter}>
-          <option value="">all</option>
-          <option value="completed">completed</option>
-          <option value="failed">failed</option>
-          <option value="processing">processing</option>
-          <option value="queued">queued</option>
-          <option value="cancelled">cancelled</option>
-        </select>
-      </label>
+      <form className="admin-filter-grid" onSubmit={handleVideoSearch}>
+        <label>
+          Search
+          <input placeholder="Email, title, prompt, video id" value={videoSearch} onChange={(event) => setVideoSearch(event.target.value)} />
+        </label>
+        <label>
+          Status
+          <select value={videoStatusFilter} onChange={handleVideoFilter}>
+            <option value="">all</option>
+            <option value="completed">completed</option>
+            <option value="failed">failed</option>
+            <option value="processing">processing</option>
+            <option value="queued">queued</option>
+            <option value="cancelled">cancelled</option>
+            <option value="deleted">deleted</option>
+          </select>
+        </label>
+        <label>
+          Provider
+          <select value={videoProviderFilter} onChange={handleVideoProviderFilter}>
+            <option value="">all</option>
+            <option value="ffmpeg">ffmpeg</option>
+            <option value="replicate">replicate</option>
+            <option value="fal">fal</option>
+            <option value="runway">runway</option>
+            <option value="luma">luma</option>
+          </select>
+        </label>
+        <label>
+          From
+          <input type="date" value={videoFrom} onChange={(event) => setVideoFrom(event.target.value)} />
+        </label>
+        <label>
+          To
+          <input type="date" value={videoTo} onChange={(event) => setVideoTo(event.target.value)} />
+        </label>
+        <label className="check-row">
+          <input checked={includeDeletedVideos} type="checkbox" onChange={handleIncludeDeleted} />
+          Include deleted
+        </label>
+        <button className="ghost-button" type="submit">
+          <Search size={16} />
+          Search
+        </button>
+      </form>
 
       <div className="compact-list">
         {adminVideos.length === 0 && <div className="empty small">No videos.</div>}
-        {adminVideos.slice(0, 5).map((video) => (
+        {adminVideos.map((video) => (
           <article key={video._id}>
-            <strong>{video.title}</strong>
-            <span>{video.user?.email || 'unknown user'} - {video.status} - {video.costCredits} credits</span>
+            <strong>{video.title} {video.isDeleted ? '(deleted)' : ''}</strong>
+            <span>{video.user?.email || 'unknown user'} - {video.isDeleted ? 'deleted' : video.status} - {video.costCredits} credits</span>
             <span>{video.generationMode} / {video.provider} / {video.model}</span>
             {video.errorMessage && <span>{video.errorMessage}</span>}
-            <button className="ghost-button small-action" type="button" onClick={() => handleSelectVideo(video._id)}>
-              View detail
-            </button>
+            <div className="menu-wrap admin-row-menu">
+              <button className="icon-button" type="button" aria-label="Video actions" onClick={() => setAdminVideoMenuId((value) => (value === video._id ? '' : video._id))}>
+                <MoreVertical size={18} />
+              </button>
+              {adminVideoMenuId === video._id && (
+                <div className="action-menu">
+                  <button type="button" onClick={() => handleSelectVideo(video._id)}>
+                    <Film size={15} />
+                    View details
+                  </button>
+                  {video.outputVideo?.url && (
+                    <a href={video.outputVideo.url} target="_blank" rel="noreferrer">
+                      <ExternalLink size={15} />
+                      Open video
+                    </a>
+                  )}
+                  {!video.isDeleted && (
+                    <button className="danger-menu-item" disabled={deletingVideoId === video._id} type="button" onClick={() => handleDeleteAdminVideo(video)}>
+                      {deletingVideoId === video._id ? <LoaderCircle className="spin" size={15} /> : <Trash2 size={15} />}
+                      {deletingVideoId === video._id ? 'Deleting...' : 'Delete video'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </article>
         ))}
       </div>
@@ -1535,9 +1687,9 @@ function AdminPanel({ activeSection }) {
           <div className="detail-header">
             <div>
               <strong>{selectedVideo.video.title}</strong>
-              <span>{selectedVideo.video.user?.email || 'unknown user'} - {selectedVideo.video.status}</span>
+              <span>{selectedVideo.video.user?.email || 'unknown user'} - {selectedVideo.video.isDeleted ? 'deleted' : selectedVideo.video.status}</span>
             </div>
-            <StatusBadge status={selectedVideo.video.status} />
+            <StatusBadge status={selectedVideo.video.isDeleted ? 'deleted' : selectedVideo.video.status} />
           </div>
 
           <div className="admin-media-grid">
@@ -1564,9 +1716,17 @@ function AdminPanel({ activeSection }) {
             <div><span>Resolution</span><strong>{selectedVideo.video.outputVideo?.resolution || selectedVideo.job?.resolution || 'N/A'}</strong></div>
             <div><span>Created</span><strong>{new Date(selectedVideo.video.createdAt).toLocaleString('vi-VN')}</strong></div>
             <div><span>Completed</span><strong>{selectedVideo.job?.completedAt ? new Date(selectedVideo.job.completedAt).toLocaleString('vi-VN') : 'N/A'}</strong></div>
+            <div><span>Deleted</span><strong>{selectedVideo.video.deletedAt ? new Date(selectedVideo.video.deletedAt).toLocaleString('vi-VN') : 'N/A'}</strong></div>
+            <div><span>Deleted By</span><strong>{selectedVideo.video.deletedByRole || 'N/A'}</strong></div>
+            <div><span>Deletion Reason</span><strong>{selectedVideo.video.deletionReason || 'N/A'}</strong></div>
             <div><span>Provider Request</span><strong>{selectedVideo.job?.providerGenerationId || 'N/A'}</strong></div>
             <div><span>Error</span><strong>{selectedVideo.video.errorMessage || selectedVideo.job?.errorMessage || 'N/A'}</strong></div>
           </div>
+          {!selectedVideo.video.isDeleted && (
+            <button className="danger-button compact" disabled={deletingVideoId === selectedVideo.video._id} type="button" onClick={() => handleDeleteAdminVideo(selectedVideo.video)}>
+              {deletingVideoId === selectedVideo.video._id ? 'Deleting...' : 'Delete video'}
+            </button>
+          )}
         </div>
       )}
 
@@ -2025,11 +2185,14 @@ function StatusBadge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
 }
 
-function ProjectCard({ project, onCancel, onRefresh }) {
+function ProjectCard({ project, onCancel, onDelete, onRefresh }) {
   const [reporting, setReporting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [message, setMessage] = useState('');
   const canCancel = ['queued', 'processing', 'post_processing', 'uploading'].includes(project.status);
+  const canDelete = ['completed', 'failed', 'cancelled'].includes(project.status);
 
   async function handleReport() {
     const reason = window.prompt('Ly do report video nay?');
@@ -2072,6 +2235,24 @@ function ProjectCard({ project, onCancel, onRefresh }) {
     }
   }
 
+  async function handleDelete() {
+    if (!window.confirm('Delete this video?\n\nThe video will be removed from your library.\nCredits used to generate this video will not be refunded.')) {
+      return;
+    }
+
+    setDeleting(true);
+    setMessage('');
+    setMenuOpen(false);
+
+    try {
+      await onDelete(project._id);
+      setMessage('Video deleted successfully.');
+    } catch (err) {
+      setMessage(err.message);
+      setDeleting(false);
+    }
+  }
+
   return (
     <article className="project-card">
       <div className="project-media">
@@ -2084,7 +2265,40 @@ function ProjectCard({ project, onCancel, onRefresh }) {
 
       <div className="project-info">
         <div>
-          <h3>{project.title}</h3>
+          <div className="card-title-row">
+            <h3>{project.title}</h3>
+            <div className="menu-wrap">
+              <button className="icon-button" type="button" aria-label="Video actions" onClick={() => setMenuOpen((value) => !value)}>
+                <MoreVertical size={18} />
+              </button>
+              {menuOpen && (
+                <div className="action-menu">
+                  {project.outputVideo?.url && (
+                    <>
+                      <a href={project.outputVideo.url} target="_blank" rel="noreferrer">
+                        <ExternalLink size={15} />
+                        Open
+                      </a>
+                      <a href={project.outputVideo.url} download>
+                        <Download size={15} />
+                        Download
+                      </a>
+                    </>
+                  )}
+                  <button disabled={reporting} type="button" onClick={handleReport}>
+                    <Flag size={15} />
+                    Report
+                  </button>
+                  {canDelete && (
+                    <button className="danger-menu-item" disabled={deleting} type="button" onClick={handleDelete}>
+                      {deleting ? <LoaderCircle className="spin" size={15} /> : <Trash2 size={15} />}
+                      {deleting ? 'Deleting...' : 'Delete'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
           <StatusBadge status={project.status} />
         </div>
         <p>{project.prompt || 'Khong co prompt'}</p>
@@ -2095,16 +2309,6 @@ function ProjectCard({ project, onCancel, onRefresh }) {
         </div>
         {message && <div className="muted-message">{message}</div>}
         <div className="card-actions">
-          {project.outputVideo?.url && (
-            <a className="ghost-link" href={project.outputVideo.url} download>
-              <Download size={16} />
-              Download
-            </a>
-          )}
-          <button className="ghost-button" disabled={reporting} type="button" onClick={handleReport}>
-            {reporting ? <LoaderCircle className="spin" size={16} /> : <Flag size={16} />}
-            Report
-          </button>
           {canCancel && (
             <button className="danger-button compact" disabled={cancelling} type="button" onClick={handleCancel}>
               {cancelling ? <LoaderCircle className="spin" size={16} /> : <Trash2 size={16} />}
@@ -2362,7 +2566,7 @@ function CreativePreview({ draft, latestProject, onGoVideos }) {
   );
 }
 
-function HistoryPanel({ error, loading, onCancelProject, onRefreshProject, projects }) {
+function HistoryPanel({ error, loading, onCancelProject, onDeleteProject, onRefreshProject, projects }) {
   const [filter, setFilter] = useState('all');
   const filteredProjects = filter === 'all'
     ? projects
@@ -2404,7 +2608,13 @@ function HistoryPanel({ error, loading, onCancelProject, onRefreshProject, proje
 
       <div className="project-list">
         {filteredProjects.map((project) => (
-          <ProjectCard key={project._id} project={project} onCancel={onCancelProject} onRefresh={onRefreshProject} />
+          <ProjectCard
+            key={project._id}
+            project={project}
+            onCancel={onCancelProject}
+            onDelete={onDeleteProject}
+            onRefresh={onRefreshProject}
+          />
         ))}
       </div>
     </section>
@@ -2491,6 +2701,11 @@ function Dashboard({ user, onLogout }) {
         creditWallet: result.wallet
       }));
     }
+  }
+
+  async function handleDeleteProject(projectId) {
+    await deleteProject(projectId);
+    setProjects((items) => items.filter((item) => item._id !== projectId));
   }
 
   useEffect(() => {
@@ -2600,6 +2815,7 @@ function Dashboard({ user, onLogout }) {
           loading={loading}
           projects={projects}
           onCancelProject={handleCancelProject}
+          onDeleteProject={handleDeleteProject}
           onRefreshProject={refreshProject}
         />
       );

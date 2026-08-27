@@ -13,6 +13,7 @@ import { estimateVideoCost, getSystemSettings } from '../services/settingService
 import { notifyUser } from '../services/notificationService.js';
 import { moderateProjectInput } from '../services/moderationService.js';
 import { writeAuditLog } from '../services/auditService.js';
+import { canDeleteVideo, softDeleteVideo } from '../services/videoDeletionService.js';
 
 export const projectRoutes = express.Router();
 
@@ -30,7 +31,7 @@ projectRoutes.use(requireAuth);
 
 projectRoutes.get('/', async (req, res, next) => {
   try {
-    const projects = await VideoProject.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const projects = await VideoProject.find({ user: req.user._id, isDeleted: { $ne: true } }).sort({ createdAt: -1 });
     res.json({ projects });
   } catch (error) {
     next(error);
@@ -185,7 +186,7 @@ projectRoutes.post('/', imageUpload.single('image'), async (req, res, next) => {
 
 projectRoutes.post('/:id/cancel', async (req, res, next) => {
   try {
-    const project = await VideoProject.findOne({ _id: req.params.id, user: req.user._id });
+    const project = await VideoProject.findOne({ _id: req.params.id, user: req.user._id, isDeleted: { $ne: true } });
 
     if (!project) {
       return res.status(404).json({ message: 'Khong tim thay project' });
@@ -252,9 +253,40 @@ projectRoutes.post('/:id/cancel', async (req, res, next) => {
   }
 });
 
+projectRoutes.delete('/:id', async (req, res, next) => {
+  try {
+    const project = await VideoProject.findOne({ _id: req.params.id, isDeleted: { $ne: true } });
+
+    if (!project) {
+      return res.status(404).json({ message: 'Khong tim thay video' });
+    }
+
+    if (project.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Ban khong co quyen xoa video nay' });
+    }
+
+    if (!canDeleteVideo(project)) {
+      return res.status(409).json({ message: 'Video dang duoc xu ly. Vui long huy job truoc khi xoa.' });
+    }
+
+    await softDeleteVideo({
+      project,
+      actor: req.user,
+      actorRole: 'user',
+      action: 'video.delete',
+      reason: 'user_delete',
+      req
+    });
+
+    res.json({ success: true, message: 'Video deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 projectRoutes.get('/:id/events', async (req, res, next) => {
   try {
-    const project = await VideoProject.findOne({ _id: req.params.id, user: req.user._id });
+    const project = await VideoProject.findOne({ _id: req.params.id, user: req.user._id, isDeleted: { $ne: true } });
 
     if (!project) {
       return res.status(404).json({ message: 'Khong tim thay project' });
@@ -306,7 +338,7 @@ projectRoutes.get('/:id/events', async (req, res, next) => {
 
 projectRoutes.get('/:id', async (req, res, next) => {
   try {
-    const project = await VideoProject.findOne({ _id: req.params.id, user: req.user._id });
+    const project = await VideoProject.findOne({ _id: req.params.id, user: req.user._id, isDeleted: { $ne: true } });
 
     if (!project) {
       return res.status(404).json({ message: 'Khong tim thay project' });
